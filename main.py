@@ -366,44 +366,59 @@ elif menu == "ค้นหา/จัดการข้อมูล":
     st.header(f"🔍 จัดการข้อมูล (เป้าหมาย: {target_sheet})")
     
     # ส่วนแจ้งเตือนใกล้หมดอายุ (ย้ายมาไว้ที่นี่)
-    with st.expander("🔔 ตรวจสอบรายชื่อใกล้หมดอายุ (ภายใน 90 วัน)", expanded=False):
+    with st.expander("🔔 ตรวจสอบรายชื่อใกล้หมดอายุ และที่หมดอายุแล้ว", expanded=False):
         f_df = df.copy() if app_category == "ทั้งหมด" else df[df[cols['type']].str.contains(app_category, na=False)].copy()
         today = datetime.now()
         near_date = today + timedelta(days=90)
-        near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
         
-        if len(near_exp_df) > 0:
-            st.info(f"พบรายชื่อใกล้หมดอายุจำนวน {len(near_exp_df)} ราย")
+        # แยกเป็น 2 กลุ่ม
+        near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
+        expired_df = f_df[f_df[cols['expire']] < today]
+        
+        if len(near_exp_df) > 0 or len(expired_df) > 0:
+            if len(expired_df) > 0:
+                st.error(f"⚠️ พบรายชื่อที่หมดอายุแล้วจำนวน {len(expired_df)} ราย")
+            if len(near_exp_df) > 0:
+                st.warning(f"🔔 พบรายชื่อใกล้หมดอายุ (90 วัน) จำนวน {len(near_exp_df)} ราย")
+                
             import io
             buffer = io.BytesIO()
             try:
+                # รวมทั้งสองกลุ่มเพื่อ Export
+                combined_exp_df = pd.concat([expired_df, near_exp_df])
+                
                 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                    # ค้นหาคอลัมน์ที่สะกดตรงกับในชีตจริง
                     potential = {
                         'name': [cols['name'], 'ชื่อ - สกุล'],
                         'cid': [cols['cid'], 'เลขประจำตัวประชาชน'],
                         'shop': [cols['shop'], 'ชื่อสถานประกอบการ'],
-                        'address': [cols['address'], 'สำนักงาน/บ้านเลขที่', 'บ้านเลขที่'],
+                        'address': [cols['address'], 'สำนักงาน/บ้าน เลขที่', 'สำนักงาน/บ้านเลขที่', 'บ้านเลขที่'],
                         'moo': [cols['moo'], 'หมู่ที่'],
                         'expire': [cols['expire'], 'วันหมดอายุใบอนุญาต']
                     }
                     final_cols = []
                     for k, v in potential.items():
                         for alias in v:
-                            if alias in near_exp_df.columns:
+                            if alias in combined_exp_df.columns:
                                 final_cols.append(alias); break
                     
-                    export_df = near_exp_df[final_cols].copy()
+                    export_df = combined_exp_df[final_cols].copy()
                     if cols['expire'] in export_df.columns:
                         export_df[cols['expire']] = export_df[cols['expire']].dt.strftime('%d/%m/%Y')
-                    export_df.to_excel(writer, index=False, sheet_name='รายชื่อแจ้งเตือน')
+                    export_df.to_excel(writer, index=False, sheet_name='รายชื่อที่ต้องแจ้งเตือน')
                 
-                st.download_button("📥 ดาวน์โหลดไฟล์รายชื่อ (Excel)", buffer.getvalue(), 
-                                 file_name=f"รายชื่อแจ้งเตือน_{datetime.now().strftime('%d%m%Y')}.xlsx",
+                st.download_button("📥 ดาวน์โหลดไฟล์รายชื่อทั้งหมด (Excel)", buffer.getvalue(), 
+                                 file_name=f"รายชื่อแจ้งเตือน_รวม_{datetime.now().strftime('%d%m%Y')}.xlsx",
                                  mime="application/vnd.ms-excel", type="primary")
-                st.dataframe(near_exp_df, use_container_width=True)
+                
+                if len(expired_df) > 0:
+                    st.subheader("🛑 รายชื่อที่หมดอายุแล้ว")
+                    st.dataframe(expired_df, use_container_width=True)
+                if len(near_exp_df) > 0:
+                    st.subheader("⏳ รายชื่อใกล้หมดอายุ")
+                    st.dataframe(near_exp_df, use_container_width=True)
             except Exception as e: st.error(f"สร้างไฟล์ไม่สำเร็จ: {e}")
-        else: st.success("✅ ไม่มีรายชื่อใกล้หมดอายุ")
+        else: st.success("✅ ไม่มีรายชื่อใกล้หมดอายุ หรือหมดอายุแล้ว")
 
     st.divider()
     if st.button("➕ ลงทะเบียนรายใหม่", use_container_width=True, type="primary"):
