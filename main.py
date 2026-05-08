@@ -1,0 +1,923 @@
+import streamlit as st
+import auth
+import pandas as pd
+import gspread
+from datetime import datetime, timedelta
+import os
+import io
+import streamlit.components.v1 as components
+import time
+
+# PDF generation libraries
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from pypdf import PdfReader, PdfWriter
+import io
+import os
+
+try:
+    pdfmetrics.registerFont(TTFont('THSarabunNew', 'THSarabunNew.ttf'))
+except Exception as e:
+    print(f"Font registration error: {e}")
+
+def format_cid(cid):
+    """Format Thai ID (13 digits) to: x xxxx xxxxx xx x"""
+    cid = str(cid).strip().replace(' ', '').replace('-', '')
+    if len(cid) == 13:
+        return f"{cid[0]} {cid[1:5]} {cid[5:10]} {cid[10:12]} {cid[12]}"
+    return cid
+
+def create_pdf_overlay(data):
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
+    can.setFont('THSarabunNew', 14.5)
+    
+    # Coordinates (x, y) from bottom-left corner
+    base_h = 841.89
+    
+    # Exact coordinates mapping based on pdfplumber extraction
+    can.drawString(82, base_h - 200.17 - 7.5, str(data.get('p_license_book', '')))
+    can.drawString(145, base_h - 200.17 - 7.5, str(data.get('p_license_no', '')))
+    can.drawString(200, base_h - 200.17 - 7.5, str(data.get('p_license_year', '')))
+    
+    can.drawString(275, base_h - 225.66 - 7.5, str(data.get('p_name', '')))
+    can.drawString(505, base_h - 225.66 - 7.5, str(data.get('p_nationality', '')))
+    
+    can.drawString(115, base_h - 245.16 - 7.5, str(data.get('p_addr', '')))
+    can.drawString(195, base_h - 245.16 - 7.5, str(data.get('p_moo', '')))
+    # Note: Tambon, Amphoe, Province are hardcoded in the template, so we skip them here.
+    
+    can.drawString(155, base_h - 264.66 - 7.5, format_cid(data.get('p_cid', '')))
+    can.drawString(370, base_h - 264.66 - 7.5, str(data.get('p_phone', '')))
+    
+    can.drawString(220, base_h - 290.16 - 7.5, str(data.get('p_shop', '')))
+    can.drawString(100, base_h - 309.66 - 7.5, str(data.get('p_type', '')))
+    
+    can.drawString(110, base_h - 329.16 - 7.5, str(data.get('p_shop_addr', '')))
+    can.drawString(195, base_h - 329.16 - 7.5, str(data.get('p_shop_moo', '')))
+    can.drawString(140, base_h - 348.66 - 7.5, str(data.get('p_shop_phone', '')))
+    
+    can.drawString(230, base_h - 374.16 - 7.5, str(data.get('p_fee', '')))
+    can.drawString(320, base_h - 374.16 - 7.5, str(data.get('p_fee_text', '')))
+    
+    rcpt_book = str(data.get('p_rcpt_book', '')).strip()
+    rcpt_no = str(data.get('p_rcpt_no', '')).strip()
+    rcpt_combined = rcpt_book
+    if rcpt_no and rcpt_no != "-":
+        if rcpt_book:
+            rcpt_combined += f" / {rcpt_no}"
+        else:
+            rcpt_combined = rcpt_no
+            
+    can.drawString(160, base_h - 393.66 - 7.5, rcpt_combined)
+    can.drawString(355, base_h - 393.66 - 7.5, str(data.get('p_rcpt_date', '')))
+    
+    can.drawString(300, base_h - 594.66 - 7.5, str(data.get('issue_day', '')))
+    can.drawString(360, base_h - 594.66 - 7.5, str(data.get('issue_month', '')))
+    can.drawString(455, base_h - 594.66 - 7.5, str(data.get('issue_year', '')))
+    
+    can.drawString(300, base_h - 620.16 - 7.5, str(data.get('expire_day', '')))
+    can.drawString(360, base_h - 620.16 - 7.5, str(data.get('expire_month', '')))
+    can.drawString(455, base_h - 620.16 - 7.5, str(data.get('expire_year', '')))
+    
+    can.save()
+    packet.seek(0)
+    
+    new_pdf = PdfReader(packet)
+    existing_pdf = PdfReader(open("template.pdf", "rb"))
+    output = PdfWriter()
+    
+    page = existing_pdf.pages[0]
+    page.merge_page(new_pdf.pages[0])
+    output.add_page(page)
+    
+    output_stream = io.BytesIO()
+    output.write(output_stream)
+    output_stream.seek(0)
+    return output_stream
+
+def create_app_pdf_overlay(data):
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
+    can.setFont('THSarabunNew', 14.5)
+    
+    # Use EXACT coordinates from the original document's words, minus a small offset to sit on the dotted line
+    offset_y = -3.0
+    
+    can.drawString(260, 648.2 - offset_y, str(data.get('p_type', '')))
+    can.drawString(360, 620.6 - offset_y, str(data.get('app_location', 'อบต.ดอยงาม')))
+    
+    can.drawString(355, 592.9 - offset_y, str(data.get('app_day', '')))
+    can.drawString(415, 592.9 - offset_y, str(data.get('app_month', '')))
+    can.drawString(505, 592.9 - offset_y, str(data.get('app_year', '')))
+    
+    can.drawString(150, 565.3 - offset_y, str(data.get('p_name', '')))
+    can.drawString(355, 565.3 - offset_y, str(data.get('p_age', '')))
+    can.drawString(430, 565.3 - offset_y, str(data.get('p_nationality', 'ไทย')))
+    
+    can.drawString(100, 537.6 - offset_y, str(data.get('p_agent', '')))
+    
+    can.drawString(205, 509.9 - offset_y, str(data.get('p_addr', '')))
+    can.drawString(275, 509.9 - offset_y, str(data.get('p_moo', '')))
+    can.drawString(350, 509.9 - offset_y, str(data.get('p_soi', '')))
+    can.drawString(430, 509.9 - offset_y, str(data.get('p_road', '')))
+    
+    can.drawString(130, 482.3 - offset_y, str(data.get('p_subdistrict', 'ดอยงาม')))
+    can.drawString(280, 482.3 - offset_y, str(data.get('p_district', 'พาน')))
+    can.drawString(360, 482.3 - offset_y, str(data.get('p_province', 'เชียงราย')))
+    
+    can.drawString(150, 454.6 - offset_y, str(data.get('p_phone', '')))
+    
+    # Checkboxes Section 2
+    if data.get('chk_1'): can.drawString(112, 399.3 - offset_y, "/")
+    if data.get('chk_2'): can.drawString(112, 371.7 - offset_y, "/")
+    if data.get('chk_3'): can.drawString(112, 344.1 - offset_y, "/")
+    if data.get('chk_4'): can.drawString(112, 316.3 - offset_y, "/")
+    if data.get('chk_5'): can.drawString(112, 288.7 - offset_y, "/")
+    if data.get('chk_6'): can.drawString(112, 261.0 - offset_y, "/")
+    if data.get('chk_7'): can.drawString(112, 233.4 - offset_y, "/")
+    
+    # Signature at bottom (moved left to prevent overlap)
+    # can.drawString(215, 122.8 - offset_y, str(data.get('p_name', ''))) # Removed per user request to leave blank for manual signing
+    
+    can.save()
+    packet.seek(0)
+    
+    new_pdf = PdfReader(packet)
+    try:
+        existing_pdf = PdfReader(open("app_template.pdf", "rb"))
+    except FileNotFoundError:
+        return None
+        
+    output = PdfWriter()
+    page = existing_pdf.pages[0]
+    page.merge_page(new_pdf.pages[0])
+    output.add_page(page)
+    
+    output_stream = io.BytesIO()
+    output.write(output_stream)
+    output_stream.seek(0)
+    return output_stream
+
+# --- ส่วนที่ 1: การตั้งค่าการเชื่อมต่อและ API ---
+SERVICE_ACCOUNT_FILE = 'credentials.json' 
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1t_xTI0RvXTUsUAJOvqgs1RFKsDK5f5qPCOPOvIqeMrw/edit"
+
+def get_gspread_client():
+    try:
+        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        return gspread.service_account(filename=SERVICE_ACCOUNT_FILE, scopes=scope)
+    except Exception as e:
+        st.error(f"❌ โหลดไฟล์กุญแจ (JSON) ไม่สำเร็จ: {e}")
+        return None
+
+def update_gsheet(row_idx, data_dict):
+    """Update a specific row in the Google Sheet based on row_idx (2-indexed)"""
+    try:
+        client = get_gspread_client()
+        if not client: return False
+        sh = client.open_by_url(SHEET_URL)
+        sheet = sh.get_worksheet(0)
+        
+        # Fetch current values to preserve columns not in data_dict
+        headers = sheet.row_values(1)
+        current_values = sheet.row_values(row_idx)
+        
+        # Pad current_values if it's shorter than headers
+        if len(current_values) < len(headers):
+            current_values.extend([""] * (len(headers) - len(current_values)))
+            
+        update_values = []
+        for i, h in enumerate(headers):
+            if h in data_dict:
+                update_values.append(data_dict[h])
+            else:
+                # Keep original value if not provided in update
+                update_values.append(current_values[i] if i < len(current_values) else "")
+        
+        try:
+            sheet.update(range_name=f"A{row_idx}", values=[update_values])
+        except TypeError:
+            sheet.update(f"A{row_idx}", [update_values])
+        return True
+    except Exception as e:
+        st.error(f"❌ อัปเดต Google Sheet ไม่สำเร็จ: {e}")
+        return False
+
+def add_gsheet(data_dict):
+    """Append a new row to the Google Sheet"""
+    try:
+        client = get_gspread_client()
+        if not client: return False
+        sh = client.open_by_url(SHEET_URL)
+        sheet = sh.get_worksheet(0)
+        headers = sheet.row_values(1)
+        new_row = [data_dict.get(h, "") for h in headers]
+        sheet.append_row(new_row)
+        return True
+    except Exception as e:
+        st.error(f"❌ เพิ่มข้อมูลลง Google Sheet ไม่สำเร็จ: {e}")
+        return False
+
+def print_preview(title, content_html):
+    html_template = f"""
+    <html>
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
+        <style>
+            body {{ font-family: 'Sarabun', sans-serif; padding: 20px; line-height: 1.5; }}
+            .no-print {{ text-align: right; margin-bottom: 20px; }}
+            .garuda {{ display: block; margin: 0 auto; width: 60px; }}
+            .header {{ text-align: center; font-weight: bold; font-size: 18px; margin-top: 10px; }}
+            .content {{ margin-top: 20px; font-size: 14px; }}
+            @media print {{ .no-print {{ display: none; }} body {{ padding: 0; }} }}
+            button {{ padding: 10px 20px; background-color: #1E3A8A; color: white; border: none; border-radius: 5px; cursor: pointer; }}
+        </style>
+    </head>
+    <body>
+        <div class="no-print">
+            <button onclick="window.print()">🖨️ สั่งพิมพ์เอกสาร</button>
+        </div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Garuda_Emb_of_Thailand_%28Black_and_White%29.svg/512px-Garuda_Emb_of_Thailand_%28Black_and_White%29.svg.png" class="garuda">
+        <div class="header">{title}</div>
+        <div class="content">{content_html}</div>
+    </body>
+    </html>
+    """
+    components.html(html_template, height=600, scrolling=True)
+
+@st.cache_data(ttl=60)
+def load_data():
+    try:
+        client = get_gspread_client()
+        if not client: return pd.DataFrame(), {}, []
+        sh = client.open_by_url(SHEET_URL)
+        sheet_names = [s.title for s in sh.worksheets()]
+        worksheet = sh.get_worksheet(0) 
+        raw_data = worksheet.get_all_values()
+        if not raw_data: return pd.DataFrame(), {}, sheet_names
+        df = pd.DataFrame(raw_data[1:], columns=raw_data[0]).astype(str)
+        df.columns = df.columns.str.strip()
+        
+        # Helper to find column name among synonyms
+        def find_col(synonyms, default):
+            for s in synonyms:
+                if s in df.columns: return s
+            return default
+
+        mapping = {
+            'cid': find_col(['เลขประจำตัวประชาชน', 'เลขบัตรประชาชน'], 'เลขประจำตัวประชาชน'),
+            'name': find_col(['ชื่อ - สกุล', 'ชื่อ-สกุล', 'ชื่อผู้ประกอบการ'], 'ชื่อ - สกุล'),
+            'shop': find_col(['ชื่อสถานประกอบการ', 'ชื่อร้าน'], 'ชื่อสถานประกอบการ'),
+            'expire': find_col(['วันหมดอายุใบอนุญาต', 'วันหมดอายุ'], 'วันหมดอายุใบอนุญาต'),
+            'fee': find_col(['ค่าธรรมเนียม', 'จำนวนเงิน'], 'ค่าธรรมเนียม'),
+            'type': find_col(['ประเภทกิจการ', 'ประเภท'], 'ประเภทกิจการ'),
+            'address': find_col(['ที่อยู่เลขที่', 'สำนักงาน/บ้าน เลขที่', 'สำนักงาน/บ้านเลขที่', 'ที่อยู่/บ้านเลขที่', 'ตั้งอยู่เลขที่', 'บ้านเลขที่'], 'สำนักงาน/บ้านเลขที่'),
+            'moo': find_col(['หมู่ที่', 'หมู่'], 'หมู่ที่'),
+            'phone': find_col(['โทรศัพท์', 'เบอร์โทร', 'หมายเลขโทรศัพท์'], 'โทรศัพท์'),
+            'rcpt_book': find_col(['ใบเสร็จรับเงินเล่มที่', 'เล่มที่'], 'ใบเสร็จรับเงินเล่มที่'),
+            'rcpt_no': find_col(['เลขที่', 'เลขที่ใบเสร็จ'], 'เลขที่'),
+            'rcpt_date': find_col(['ลงวันที่', 'วันที่รับเงิน'], 'ลงวันที่')
+        }
+        if mapping['expire'] in df.columns:
+            df[mapping['expire']] = pd.to_datetime(df[mapping['expire']], dayfirst=True, errors='coerce')
+            df[mapping['expire']] = df[mapping['expire']].apply(
+                lambda x: x.replace(year=x.year - 543) if pd.notnull(x) and x.year > 2500 else x
+            )
+        return df, mapping, sheet_names
+    except Exception as e:
+        st.error(f"❌ ไม่สามารถดึงข้อมูลได้: {str(e)}")
+        return pd.DataFrame(), {}, []
+
+@st.cache_data(ttl=60)
+def load_sheet_data(sheet_name):
+    try:
+        client = get_gspread_client()
+        if not client: return pd.DataFrame()
+        sh = client.open_by_url(SHEET_URL)
+        try:
+            worksheet = sh.worksheet(sheet_name)
+        except:
+            return pd.DataFrame()
+        raw_data = worksheet.get_all_values()
+        if not raw_data: return pd.DataFrame()
+        df = pd.DataFrame(raw_data[1:], columns=raw_data[0]).astype(str)
+        return df
+    except Exception as e:
+        st.error(f"❌ ไม่สามารถดึงข้อมูลชีต {sheet_name} ได้: {str(e)}")
+        return pd.DataFrame()
+
+st.set_page_config(page_title="ระบบทะเบียนกิจการ อบต.ดอยงาม", layout="wide")
+
+if not auth.check_login():
+    st.stop()
+
+df, cols, sheet_names = load_data()
+
+with st.sidebar:
+    st.title("🏛️ อบต.ดอยงาม (Online)")
+    if not sheet_names:
+        sheet_names = ["รวมกิจการ"]
+    target_sheet = st.selectbox("เลือกชีตเป้าหมาย (ออกตรวจ)", sheet_names)
+    app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
+    st.divider()
+    menu = st.radio("เมนูหลัก", ["หน้าแรก (Dashboard)", "ค้นหา/จัดการข้อมูล", "📋 รายชื่อออกตรวจ"])
+    if st.button("🔄 อัปเดตข้อมูลใหม่"):
+        st.cache_data.clear()
+        st.rerun()
+    st.divider()
+    if st.button("🚪 ออกจากระบบ", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
+
+# --- หน้า Dashboard ---
+if menu == "หน้าแรก (Dashboard)":
+    st.header(f"📊 สรุปข้อมูล: {app_category}")
+    if not df.empty and cols['type'] in df.columns:
+        f_df = df.copy() if app_category == "ทั้งหมด" else df[df[cols['type']].str.contains(app_category, na=False)].copy()
+        today = datetime.now()
+        near_date = today + timedelta(days=90)
+        expired_df = f_df[f_df[cols['expire']] < today]
+        near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
+        
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("ผู้ประกอบกิจการ", f"{f_df[cols['cid']].nunique() if cols['cid'] in f_df.columns else 0}")
+        c2.metric("ใบอนุญาตทั้งหมด", f"{len(f_df)}")
+        c3.metric("หมดอายุแล้ว", f"{len(expired_df)}", delta_color="inverse")
+        c4.metric("ใกล้หมดอายุ (90 วัน)", f"{len(near_exp_df)}")
+        
+        st.divider()
+        with st.expander("📁 ดูข้อมูลทั้งหมดในระบบ", expanded=True):
+            st.dataframe(f_df, use_container_width=True)
+
+# --- หน้าค้นหา/จัดการข้อมูล ---
+elif menu == "ค้นหา/จัดการข้อมูล":
+    st.header(f"🔍 จัดการข้อมูล (เป้าหมาย: {target_sheet})")
+    
+    # ส่วนแจ้งเตือนใกล้หมดอายุ (ย้ายมาไว้ที่นี่)
+    with st.expander("🔔 ตรวจสอบรายชื่อใกล้หมดอายุ (ภายใน 90 วัน)", expanded=False):
+        f_df = df.copy() if app_category == "ทั้งหมด" else df[df[cols['type']].str.contains(app_category, na=False)].copy()
+        today = datetime.now()
+        near_date = today + timedelta(days=90)
+        near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
+        
+        if len(near_exp_df) > 0:
+            st.info(f"พบรายชื่อใกล้หมดอายุจำนวน {len(near_exp_df)} ราย")
+            import io
+            buffer = io.BytesIO()
+            try:
+                with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                    # ค้นหาคอลัมน์ที่สะกดตรงกับในชีตจริง
+                    potential = {
+                        'name': [cols['name'], 'ชื่อ - สกุล'],
+                        'cid': [cols['cid'], 'เลขประจำตัวประชาชน'],
+                        'shop': [cols['shop'], 'ชื่อสถานประกอบการ'],
+                        'address': [cols['address'], 'สำนักงาน/บ้านเลขที่', 'บ้านเลขที่'],
+                        'moo': [cols['moo'], 'หมู่ที่'],
+                        'expire': [cols['expire'], 'วันหมดอายุใบอนุญาต']
+                    }
+                    final_cols = []
+                    for k, v in potential.items():
+                        for alias in v:
+                            if alias in near_exp_df.columns:
+                                final_cols.append(alias); break
+                    
+                    export_df = near_exp_df[final_cols].copy()
+                    if cols['expire'] in export_df.columns:
+                        export_df[cols['expire']] = export_df[cols['expire']].dt.strftime('%d/%m/%Y')
+                    export_df.to_excel(writer, index=False, sheet_name='รายชื่อแจ้งเตือน')
+                
+                st.download_button("📥 ดาวน์โหลดไฟล์รายชื่อ (Excel)", buffer.getvalue(), 
+                                 file_name=f"รายชื่อแจ้งเตือน_{datetime.now().strftime('%d%m%Y')}.xlsx",
+                                 mime="application/vnd.ms-excel", type="primary")
+                st.dataframe(near_exp_df, use_container_width=True)
+            except Exception as e: st.error(f"สร้างไฟล์ไม่สำเร็จ: {e}")
+        else: st.success("✅ ไม่มีรายชื่อใกล้หมดอายุ")
+
+    st.divider()
+    if st.button("➕ ลงทะเบียนรายใหม่", use_container_width=True, type="primary"):
+        st.session_state['show_add_form'] = not st.session_state.get('show_add_form', False)
+
+    # ฟอร์มลงทะเบียนรายใหม่ (ปรับปรุงให้ดึงตามคอลัมน์ในชีตจริง)
+    if st.session_state.get('show_add_form', False):
+        with st.form("add_new"):
+            st.subheader("➕ ลงทะเบียนผู้ประกอบการใหม่")
+            c1, c2 = st.columns(2)
+            new_entry = {}
+            
+            # ใช้คอลัมน์จาก DataFrame จริงเพื่อให้ตรงกับ Excel
+            fields = df.columns.tolist()
+            
+            # คำนวณลำดับถัดไป
+            next_seq = "1"
+            if 'ลำดับ' in fields:
+                try:
+                    seqs = pd.to_numeric(df['ลำดับ'], errors='coerce').dropna()
+                    if not seqs.empty:
+                        next_seq = str(int(seqs.max()) + 1)
+                except: pass
+
+            for i, f in enumerate(fields):
+                t = c1 if i % 2 == 0 else c2
+                if f == 'ลำดับ':
+                    new_entry[f] = t.text_input(f, value=next_seq)
+                elif 'วัน' in f:
+                    new_entry[f] = t.date_input(f, value=datetime.now()).strftime('%d/%m/%Y')
+                else:
+                    new_entry[f] = t.text_input(f, value="")
+
+            if st.form_submit_button("💾 บันทึกข้อมูลลงชีต", type="primary"):
+                with st.spinner("กำลังเพิ่มข้อมูลลง Google Sheet..."):
+                    if add_gsheet(new_entry):
+                        st.success("✅ เพิ่มข้อมูลสำเร็จ!")
+                        time.sleep(1)
+                        st.session_state['show_add_form'] = False  # Close the form
+                        st.cache_data.clear()
+                        st.rerun()
+                    else:
+                        st.error("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง")
+
+    # ส่วนค้นหา
+    search = st.text_input("🔍 ค้นหาชื่อ หรือ เลขบัตร...", placeholder="เช่น 3570500xxxxxx")
+    if search:
+        search_term = search.strip().replace('-', '').replace(' ', '')
+        results = df[df[cols['name']].str.replace(' ', '').str.contains(search_term, na=False) | 
+                     df[cols['cid']].str.replace('-', '').str.replace(' ', '').str.contains(search_term, na=False)]
+        
+        if not results.empty:
+            grouped = results.groupby(cols['name'], dropna=False)
+            
+            for person_name, group_data in grouped:
+                first_row = group_data.iloc[0]
+                u_name = first_row.get(cols['name'], 'ไม่ระบุชื่อ')
+                u_cid = first_row.get(cols['cid'], '-')
+                u_addr = first_row.get(cols['address'], '-')
+                u_moo = first_row.get(cols['moo'], '-')
+                u_phone = first_row.get(cols.get('phone', 'โทรศัพท์'), '-')
+
+                num_licenses = len(group_data)
+
+                with st.container(border=True):
+                    # ส่วนหัวผู้ประกอบการ
+                    st.markdown(f"""
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                        <span style="font-size: 24px; color: #1E3A8A;">👤</span>
+                        <h3 style="color: #1E3A8A; margin: 0;">{u_name}</h3>
+                    </div>
+                    <div style="color: #4B5563; font-size: 14px; margin-bottom: 10px; margin-left: 35px;">
+                        💳 <b>นิติบุคคล/บัตรปชช:</b> {u_cid}<br>
+                        📍 <b>ที่อยู่:</b> บ้านเลขที่ {u_addr} หมู่ที่ {u_moo} | ☎ <b>โทร:</b> {u_phone}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    if st.button(f"🖨️ พิมพ์ทุกใบอนุญาต ({num_licenses} ใบ)", key=f"print_all_{first_row.name}"):
+                        st.session_state[f"do_print_all_{first_row.name}"] = True
+                        
+                    if st.session_state.get(f"do_print_all_{first_row.name}"):
+                        with st.spinner("กำลังสร้างไฟล์ PDF รวม..."):
+                            thai_months = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]
+                            merger = PdfWriter()
+                            for idx, row_item in group_data.iterrows():
+                                old_exp = row_item.get(cols['expire'])
+                                if pd.notnull(old_exp) and isinstance(old_exp, (pd.Timestamp, datetime)):
+                                    try:
+                                        issue_date = old_exp.replace(year=datetime.now().year)
+                                    except ValueError:
+                                        issue_date = old_exp.replace(year=datetime.now().year, day=28)
+                                else:
+                                    issue_date = datetime.now()
+                                    
+                                try:
+                                    expire_date = issue_date.replace(year=issue_date.year + 1) - timedelta(days=1)
+                                except ValueError:
+                                    expire_date = issue_date + timedelta(days=364)
+                                
+                                rcpt_date = datetime.now()
+                                
+                                context = {
+                                    "p_license_book": "",
+                                    "p_license_no": "",
+                                    "p_license_year": str(datetime.now().year + 543),
+                                    "p_name": str(row_item.get(cols['name'], '')),
+                                    "p_nationality": "ไทย",
+                                    "p_addr": str(row_item.get(cols['address'], '')),
+                                    "p_moo": str(row_item.get(cols['moo'], '')),
+                                    "p_cid": str(row_item.get(cols['cid'], '')),
+                                    "p_phone": str(row_item.get(cols.get('phone', 'โทรศัพท์'), '')),
+                                    "p_shop": str(row_item.get(cols['shop'], '')),
+                                    "p_type": str(row_item.get(cols['type'], '')),
+                                    "p_fee": str(row_item.get(cols['fee'], '')),
+                                    "p_fee_text": "-",
+                                    "p_rcpt_book": str(row_item.get(cols['rcpt_book'], '')),
+                                    "p_rcpt_no": str(row_item.get(cols['rcpt_no'], '')),
+                                    "p_rcpt_date": f"{rcpt_date.day} {thai_months[rcpt_date.month]} {rcpt_date.year + 543}",
+                                    "issue_day": str(issue_date.day),
+                                    "issue_month": thai_months[issue_date.month],
+                                    "issue_year": str(issue_date.year + 543),
+                                    "expire_day": str(expire_date.day),
+                                    "expire_month": thai_months[expire_date.month],
+                                    "expire_year": str(expire_date.year + 543),
+                                }
+                                single_pdf = create_pdf_overlay(context)
+                                merger.append(PdfReader(single_pdf))
+                                
+                            output_buffer = io.BytesIO()
+                            merger.write(output_buffer)
+                            output_buffer.seek(0)
+                            
+                        st.download_button(
+                            label="📥 คลิกดาวน์โหลดไฟล์ PDF รวมทั้งหมด",
+                            data=output_buffer,
+                            file_name=f"ใบอนุญาต_รวม_{u_name}.pdf",
+                            mime="application/pdf",
+                            type="primary",
+                            key=f"dl_all_{first_row.name}"
+                        )
+                        
+                    st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #e5e7eb;'>", unsafe_allow_html=True)
+                    
+                    # ส่วนใบอนุญาตย่อย
+                    for index, row in group_data.iterrows():
+                        u_type = row.get(cols['type'], 'ไม่ระบุ')
+                        u_shop = row.get(cols['shop'], '-')
+                        u_fee = row.get(cols['fee'], '-')
+                        u_expire = row.get(cols['expire'], '')
+                        
+                        rcpt_book = row.get(cols['rcpt_book'], '')
+                        rcpt_no = row.get(cols['rcpt_no'], '')
+                        u_rcpt = f"{rcpt_book}/{rcpt_no}" if rcpt_book and rcpt_no else "-"
+                        
+                        issue_date_str = "-"
+                        expire_date_str = "-"
+                        if isinstance(u_expire, pd.Timestamp) and not pd.isna(u_expire):
+                            thai_year_expire = u_expire.year + 543
+                            expire_date_str = f"{u_expire.day} {u_expire.strftime('%b')} {thai_year_expire}"
+                            try:
+                                issue_date = u_expire - timedelta(days=364)
+                                thai_year_issue = issue_date.year + 543
+                                issue_date_str = f"{issue_date.day} {issue_date.strftime('%b')} {thai_year_issue}"
+                            except: pass
+                        elif str(u_expire) != 'NaT':
+                            expire_date_str = str(u_expire)
+
+                        with st.container(border=True):
+                            st.markdown(f"""
+                            <div style="margin-bottom: 10px;">
+                                <b style="color: #374151; font-size: 16px;">📄 {u_type}</b>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                                <span style="background-color: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 12px; font-size: 13px; border: 1px solid #fde68a;">💰 ค่าธรรมเนียม {u_fee} บาท</span>
+                                <span style="background-color: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 12px; font-size: 13px; border: 1px solid #c7d2fe;">🗓️ ออกใบอนุญาต: {issue_date_str}</span>
+                                <span style="background-color: #f3f4f6; color: #4b5563; padding: 4px 10px; border-radius: 12px; font-size: 13px; border: 1px solid #e5e7eb;">🗓️ หมดอายุ: {expire_date_str}</span>
+                                <span style="background-color: #fce7f3; color: #be185d; padding: 4px 10px; border-radius: 12px; font-size: 13px; border: 1px solid #fbcfe8;">🏪 {u_shop}</span>
+                            </div>
+                            <div style="font-size: 13px; color: #6b7280; margin-bottom: 10px;">ใบเสร็จ: {u_rcpt}</div>
+                            """, unsafe_allow_html=True)
+                            
+                            c1, c2, c3, c4 = st.columns([1.5, 1.5, 1.5, 5])
+                            if c1.button("🔄 ต่ออายุ", key=f"ed_{index}", use_container_width=True): st.session_state[f"m_{index}"] = "edit"
+                            if c2.button("📜 พิมพ์ใบอนุญาต", key=f"pr_{index}", use_container_width=True): st.session_state[f"m_{index}"] = "print"
+                            c3.file_uploader("📁 สแกน", key=f"up_{index}", label_visibility="collapsed")
+                            
+                            if st.session_state.get(f"m_{index}") == "print":
+                                tab1, tab2, tab3 = st.tabs(["📄 ใบอนุญาต (อภ.๒)", "📝 คำขอ", "📋 แบบตรวจ"])
+                                
+                                with tab1:
+                                    st.subheader("จัดการข้อมูลและแก้ไขก่อนพิมพ์ (อภ.๒)")
+                                    
+                                    old_exp = row[cols['expire']]
+                                    issue_default = old_exp.replace(year=datetime.now().year) if pd.notnull(old_exp) else datetime.now()
+                                    
+                                    # วันหมดอายุใช้วันที่ก่อนวันออกใบอนุญาต แต่เพิ่มปีเป็นปีหน้า
+                                    try:
+                                        expire_default = issue_default.replace(year=issue_default.year + 1) - timedelta(days=1)
+                                    except ValueError:
+                                        # จัดการกรณี 29 กุมภาพันธ์
+                                        expire_default = issue_default + timedelta(days=364)
+                                    
+                                    with st.container(border=True):
+                                        col_f1, col_f2 = st.columns(2)
+                                        
+                                        p_name = col_f1.text_input("ชื่อผู้รับใบอนุญาต", value=row.get(cols['name'], ''), key=f"p_name_{index}")
+                                        p_nationality = col_f2.text_input("สัญชาติ", value="ไทย", key=f"p_nat_{index}")
+                                        
+                                        p_cid = col_f1.text_input("เลขประจำตัวประชาชน/นิติบุคคล", value=row.get(cols['cid'], ''), key=f"p_cid_{index}")
+                                        p_phone = col_f2.text_input("โทรศัพท์", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"p_phone_{index}")
+                                        
+                                        p_shop = col_f1.text_input("ชื่อสถานประกอบการ", value=row.get(cols['shop'], ''), key=f"p_shop_{index}")
+                                        p_type = col_f2.text_input("ประเภทกิจการ", value=row.get(cols['type'], ''), key=f"p_type_{index}")
+                                        
+                                        p_addr = col_f1.text_input("ที่อยู่/บ้านเลขที่", value=row.get(cols['address'], ''), key=f"p_addr_{index}")
+                                        p_moo = col_f2.text_input("หมู่ที่", value=row.get(cols['moo'], ''), key=f"p_moo_{index}")
+                                        
+                                        st.markdown("---")
+                                        st.markdown("**ข้อมูลใบอนุญาต และใบเสร็จรับเงิน**")
+                                        
+                                        c_l1, c_l2, c_l3 = st.columns(3)
+                                        p_license_book = c_l1.text_input("ใบอนุญาตเล่มที่", value="", key=f"p_l_book_{index}")
+                                        p_license_no = c_l2.text_input("ใบอนุญาตเลขที่", value="", key=f"p_l_no_{index}")
+                                        p_license_year = c_l3.text_input("ปี (พ.ศ.)", value=str(datetime.now().year + 543), key=f"p_l_year_{index}")
+                                        
+                                        c_r1, c_r2, c_r3, c_r4 = st.columns(4)
+                                        p_fee = c_r1.text_input("ค่าธรรมเนียม (ตัวเลข)", value=str(row.get(cols['fee'], '')), key=f"p_fee_{index}")
+                                        p_fee_text = c_r2.text_input("ค่าธรรมเนียม (ตัวอักษร)", value="-", key=f"p_fee_txt_{index}")
+                                        p_rcpt_book = c_r3.text_input("ใบเสร็จเล่มที่", value=str(row.get(cols['rcpt_book'], '')), key=f"p_book_{index}")
+                                        p_rcpt_no = c_r4.text_input("ใบเสร็จเลขที่", value=str(row.get(cols['rcpt_no'], '')), key=f"p_no_{index}")
+                                        
+                                        c_d1, c_d2, c_d3 = st.columns(3)
+                                        p_rcpt_date = c_d1.date_input("ลงวันที่ (ใบเสร็จ)", value=datetime.now(), key=f"p_rcpt_date_{index}")
+                                        p_issue = c_d2.date_input("วันที่ออกใบอนุญาต", value=issue_default, key=f"p_issue_{index}")
+                                        p_expire = c_d3.date_input("วันหมดอายุ", value=expire_default, key=f"p_expire_{index}")
+
+                                    if st.button("💾 บันทึกและสร้างไฟล์ PDF (อภ.๒)", key=f"preview_btn_{index}", type="primary"):
+                                        thai_months = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]
+                                        
+                                        # Prepare data for Google Sheet Update
+                                        update_data = {
+                                            cols['name']: p_name,
+                                            cols['cid']: p_cid,
+                                            cols['shop']: p_shop,
+                                            cols['type']: p_type,
+                                            cols['address']: p_addr,
+                                            cols['moo']: p_moo,
+                                            cols.get('phone', 'โทรศัพท์'): p_phone,
+                                            cols['fee']: p_fee,
+                                            cols['rcpt_book']: p_rcpt_book,
+                                            cols['rcpt_no']: p_rcpt_no,
+                                            cols['rcpt_date']: p_rcpt_date.strftime('%d/%m/%Y'),
+                                            cols['expire']: p_expire.strftime('%d/%m/%Y')
+                                        }
+                                        
+                                        # Save to Google Sheet
+                                        with st.spinner("กำลังบันทึกข้อมูลลง Google Sheet..."):
+                                            if update_gsheet(index + 2, update_data):
+                                                st.toast("✅ บันทึกข้อมูลลงชีตเรียบร้อยแล้ว", icon="💾")
+                                            else:
+                                                st.error("⚠️ บันทึกข้อมูลลงชีตไม่สำเร็จ แต่จะดำเนินการสร้าง PDF ต่อ")
+
+                                        context = {
+                                            "p_license_book": p_license_book,
+                                            "p_license_no": p_license_no,
+                                            "p_license_year": p_license_year,
+                                            "p_name": p_name,
+                                            "p_nationality": p_nationality,
+                                            "p_addr": p_addr,
+                                            "p_moo": p_moo,
+                                            "p_cid": p_cid,
+                                            "p_phone": p_phone,
+                                            "p_shop": p_shop,
+                                            "p_type": p_type,
+                                            "p_shop_addr": p_addr,
+                                            "p_shop_moo": p_moo,
+                                            "p_shop_phone": p_phone,
+                                            "p_fee": p_fee,
+                                            "p_fee_text": p_fee_text,
+                                            "p_rcpt_book": p_rcpt_book,
+                                            "p_rcpt_no": p_rcpt_no,
+                                            "p_rcpt_date": f"{p_rcpt_date.day} {thai_months[p_rcpt_date.month]} {p_rcpt_date.year + 543}",
+                                            "issue_day": str(p_issue.day),
+                                            "issue_month": thai_months[p_issue.month],
+                                            "issue_year": str(p_issue.year + 543),
+                                            "expire_day": str(p_expire.day),
+                                            "expire_month": thai_months[p_expire.month],
+                                            "expire_year": str(p_expire.year + 543),
+                                        }
+                                        try:
+                                            pdf_buffer = create_pdf_overlay(context)
+                                            st.download_button(
+                                                label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์ใบอนุญาต (PDF)",
+                                                data=pdf_buffer,
+                                                file_name=f"ใบอนุญาต_{p_name}.pdf",
+                                                mime="application/pdf",
+                                                type="secondary"
+                                            )
+                                            st.success("สร้างไฟล์ PDF พร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
+                                        except Exception as e:
+                                            st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ PDF: {e}")
+                                            
+                                    with tab2:
+                                        st.subheader("จัดการข้อมูลและแก้ไขก่อนพิมพ์ (แบบคำขอ)")
+                                        
+                                        with st.container(border=True):
+                                            col_a1, col_a2 = st.columns(2)
+                                            
+                                            a_type = col_a1.text_input("ประเภทกิจการ", value=row.get(cols['type'], ''), key=f"a_type_{index}")
+                                            a_name = col_a2.text_input("ข้าพเจ้า (ชื่อผู้ขอ)", value=row.get(cols['name'], ''), key=f"a_name_{index}")
+                                            
+                                            a_age = col_a1.text_input("อายุ (ปี)", value="", key=f"a_age_{index}")
+                                            a_nat = col_a2.text_input("สัญชาติ", value="ไทย", key=f"a_nat_{index}")
+                                            
+                                            a_agent = col_a1.text_input("โดย (ผู้มีอำนาจลงนามแทนนิติบุคคล)", value="", key=f"a_agent_{index}")
+                                            a_phone = col_a2.text_input("หมายเลขโทรศัพท์", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"a_phone_{index}")
+                                            
+                                            st.markdown("**ที่อยู่ผู้ขออนุญาต**")
+                                            c_addr1, c_addr2, c_addr3, c_addr4 = st.columns(4)
+                                            a_addr = c_addr1.text_input("ที่อยู่เลขที่", value=row.get(cols['address'], ''), key=f"a_addr_{index}")
+                                            a_moo = c_addr2.text_input("หมู่ที่", value=row.get(cols['moo'], ''), key=f"a_moo_{index}")
+                                            a_soi = c_addr3.text_input("ตรอก/ซอย", value="", key=f"a_soi_{index}")
+                                            a_road = c_addr4.text_input("ถนน", value="", key=f"a_road_{index}")
+                                            
+                                            c_addr5, c_addr6, c_addr7 = st.columns(3)
+                                            a_subdist = c_addr5.text_input("แขวง/ตำบล", value="ดอยงาม", key=f"a_subdist_{index}")
+                                            a_dist = c_addr6.text_input("เขต/อำเภอ", value="พาน", key=f"a_dist_{index}")
+                                            a_prov = c_addr7.text_input("จังหวัด", value="เชียงราย", key=f"a_prov_{index}")
+                                            
+                                            st.markdown("**ข้อมูลการเขียนคำขอ**")
+                                            c_req1, c_req2 = st.columns(2)
+                                            a_location = c_req1.text_input("เขียนที่", value="อบต.ดอยงาม", key=f"a_loc_{index}")
+                                            a_date = c_req2.date_input("วันที่ยื่นคำขอ", value=datetime.now(), key=f"a_date_{index}")
+                                            
+                                            st.markdown("**ข้อ ๒. เอกสารหลักฐานที่แนบมาด้วย**")
+                                            chk_1 = st.checkbox("สำเนาบัตรประจำตัว", value=False, key=f"chk_1_{index}")
+                                            chk_2 = st.checkbox("สำเนาใบอนุญาตตามกฎหมายที่เกี่ยวข้อง", value=False, key=f"chk_2_{index}")
+                                            chk_3 = st.checkbox("หนังสือให้ความเห็นชอบการประเมินผลกระทบต่อสิ่งแวดล้อม", value=False, key=f"chk_3_{index}")
+                                            chk_4 = st.checkbox("ใบมอบอำนาจ", value=False, key=f"chk_4_{index}")
+                                            chk_5 = st.checkbox("สำเนาหนังสือรับรองการจดทะเบียนเป็นนิติบุคคล", value=False, key=f"chk_5_{index}")
+                                            chk_6 = st.checkbox("หลักฐานที่แสดงการเป็นผู้มีอำนาจลงนามแทนนิติบุคคล", value=False, key=f"chk_6_{index}")
+                                            chk_7 = st.checkbox("เอกสารและหลักฐานอื่นๆ", value=False, key=f"chk_7_{index}")
+                                            
+                                        if st.button("💾 บันทึกและสร้างไฟล์ PDF (คำขอ)", key=f"app_btn_{index}", type="primary"):
+                                            thai_months = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]
+                                            
+                                            # Prepare data for Google Sheet Update
+                                            update_data = {
+                                                cols['name']: a_name,
+                                                cols['type']: a_type,
+                                                cols['address']: a_addr,
+                                                cols['moo']: a_moo,
+                                                cols.get('phone', 'โทรศัพท์'): a_phone
+                                            }
+                                            
+                                            # Save to Google Sheet
+                                            with st.spinner("กำลังบันทึกข้อมูลลง Google Sheet..."):
+                                                if update_gsheet(index + 2, update_data):
+                                                    st.toast("✅ บันทึกข้อมูลลงชีตเรียบร้อยแล้ว", icon="💾")
+                                                else:
+                                                    st.error("⚠️ บันทึกข้อมูลลงชีตไม่สำเร็จ แต่จะดำเนินการสร้าง PDF ต่อ")
+
+                                            app_context = {
+                                                "p_type": a_type,
+                                                "app_location": a_location,
+                                                "app_day": str(a_date.day),
+                                                "app_month": thai_months[a_date.month],
+                                                "app_year": str(a_date.year + 543),
+                                                "p_name": a_name,
+                                                "p_age": a_age,
+                                                "p_nationality": a_nat,
+                                                "p_agent": a_agent,
+                                                "p_addr": a_addr,
+                                                "p_moo": a_moo,
+                                                "p_soi": a_soi,
+                                                "p_road": a_road,
+                                                "p_subdistrict": a_subdist,
+                                                "p_district": a_dist,
+                                                "p_province": a_prov,
+                                                "p_phone": a_phone,
+                                                "chk_1": chk_1,
+                                                "chk_2": chk_2,
+                                                "chk_3": chk_3,
+                                                "chk_4": chk_4,
+                                                "chk_5": chk_5,
+                                                "chk_6": chk_6,
+                                                "chk_7": chk_7
+                                            }
+                                            
+                                            try:
+                                                app_pdf_buffer = create_app_pdf_overlay(app_context)
+                                                if app_pdf_buffer:
+                                                    st.download_button(
+                                                        label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์คำขอ (PDF)",
+                                                        data=app_pdf_buffer,
+                                                        file_name=f"คำขอ_{a_name}.pdf",
+                                                        mime="application/pdf",
+                                                        type="secondary",
+                                                        key=f"dl_app_btn_{index}"
+                                                    )
+                                                    st.success("สร้างไฟล์ PDF คำขอพร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
+                                                else:
+                                                    st.error("ไม่พบไฟล์แบบฟอร์มคำขอ (app_template.pdf)")
+                                            except Exception as e:
+                                                st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ PDF คำขอ: {e}")
+                                    
+                                    with tab3:
+                                        st.subheader("📋 แบบตรวจกิจการ")
+                                        st.info("คุณสามารถดาวน์โหลดแบบตรวจกิจการเปล่า เพื่อนำไปใช้ในการออกตรวจหน้างานได้ที่นี่ครับ")
+                                        
+                                        inspection_file_path = "แบบตรวจกิจการ (ปรับปรุง).pdf"
+                                        if os.path.exists(inspection_file_path):
+                                            with open(inspection_file_path, "rb") as f:
+                                                btn = st.download_button(
+                                                    label="📥 ดาวน์โหลดแบบตรวจกิจการ (PDF)",
+                                                    data=f,
+                                                    file_name="แบบตรวจกิจการ_อบต_ดอยงาม.pdf",
+                                                    mime="application/pdf",
+                                                    type="primary"
+                                                )
+                                        else:
+                                            st.error("❌ ไม่พบไฟล์ 'แบบตรวจกิจการ (ปรับปรุง).pdf' ในระบบ")
+                            
+                            elif st.session_state.get(f"m_{index}") == "edit":
+                                st.subheader("📝 แก้ไขข้อมูล / ต่ออายุ")
+                                with st.form(f"edit_form_{index}"):
+                                    c_e1, c_e2 = st.columns(2)
+                                    
+                                    edit_data = {}
+                                    for i, col_name in enumerate(df.columns):
+                                        col_ui = c_e1 if i % 2 == 0 else c_e2
+                                        val = row.get(col_name, "")
+                                        if pd.isna(val) or str(val).lower() == "nan": val = ""
+                                        
+                                        if 'วัน' in col_name:
+                                            # Special logic for auto-calculating expiration date for renewal
+                                            if col_name == cols.get('expire', 'วันหมดอายุใบอนุญาต') or col_name == 'วันหมดอายุใบอนุญาต':
+                                                try:
+                                                    if isinstance(val, (pd.Timestamp, datetime)):
+                                                        orig_date = val.date()
+                                                    elif val and '-' in str(val):
+                                                        orig_date = datetime.strptime(str(val).split(' ')[0], '%Y-%m-%d').date()
+                                                    elif val:
+                                                        orig_date = datetime.strptime(str(val).split(' ')[0], '%d/%m/%Y').date()
+                                                    else:
+                                                        orig_date = datetime.now().date()
+                                                        
+                                                    # Issue date = original date but current year
+                                                    try:
+                                                        issue_d = orig_date.replace(year=datetime.now().year)
+                                                    except ValueError:
+                                                        issue_d = orig_date.replace(year=datetime.now().year, day=28)
+                                                        
+                                                    # Expire date = issue date + 1 year - 1 day
+                                                    try:
+                                                        default_date = issue_d.replace(year=issue_d.year + 1) - timedelta(days=1)
+                                                    except ValueError:
+                                                        default_date = issue_d.replace(year=issue_d.year + 1, day=28) - timedelta(days=1)
+                                                except:
+                                                    default_date = datetime.now().date()
+                                            elif col_name == cols.get('rcpt_date', 'ลงวันที่') or col_name == 'ลงวันที่':
+                                                default_date = datetime.now().date()
+                                            else:
+                                                try:
+                                                    if isinstance(val, pd.Timestamp):
+                                                        default_date = val.date()
+                                                    elif isinstance(val, datetime):
+                                                        default_date = val.date()
+                                                    elif val:
+                                                        if '-' in str(val):
+                                                            default_date = datetime.strptime(str(val).split(' ')[0], '%Y-%m-%d').date()
+                                                        else:
+                                                            default_date = datetime.strptime(str(val).split(' ')[0], '%d/%m/%Y').date()
+                                                    else:
+                                                        default_date = datetime.now().date()
+                                                except:
+                                                    default_date = datetime.now().date()
+                                            
+                                            edit_data[col_name] = col_ui.date_input(col_name, value=default_date).strftime('%d/%m/%Y')
+                                        else:
+                                            edit_data[col_name] = col_ui.text_input(col_name, value=str(val))
+                                            
+                                    if st.form_submit_button("💾 บันทึกการแก้ไขลงชีต"):
+                                        with st.spinner("กำลังอัปเดตข้อมูล..."):
+                                            if update_gsheet(index + 2, edit_data):
+                                                st.success("✅ บันทึกข้อมูลสำเร็จ!")
+                                                time.sleep(1)
+                                                st.cache_data.clear()
+                                                st.rerun()
+                                            else:
+                                                st.error("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง")
+        else: st.warning("❌ ไม่พบข้อมูล")
+
+# --- หน้ารายชื่อออกตรวจ ---
+elif menu == "📋 รายชื่อออกตรวจ":
+    st.header(f"📋 รายชื่อผู้ประกอบการในชีต: {target_sheet}")
+    
+    with st.spinner(f"กำลังโหลดข้อมูลจากชีต {target_sheet}..."):
+        sheet_df = load_sheet_data(target_sheet)
+        
+    if sheet_df.empty:
+        st.warning(f"ยังไม่มีข้อมูลในชีต '{target_sheet}' หรือชีตว่างเปล่าครับ")
+    else:
+        # Show some basic stats
+        st.info(f"พบข้อมูลทั้งหมด {len(sheet_df)} รายการ")
+        
+        # Display the dataframe
+        st.dataframe(sheet_df, use_container_width=True)
+        
+        # Add download button
+        import io
+        buffer = io.BytesIO()
+        try:
+            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                # Excel sheet names max 31 chars
+                safe_sheet_name = target_sheet[:31]
+                sheet_df.to_excel(writer, index=False, sheet_name=safe_sheet_name)
+            
+            st.download_button(
+                label="📥 ดาวน์โหลดรายชื่อนี้เป็นไฟล์ Excel",
+                data=buffer.getvalue(),
+                file_name=f"รายชื่อ_{target_sheet}_{datetime.now().strftime('%d%m%Y')}.xlsx",
+                mime="application/vnd.ms-excel",
+                type="primary"
+            )
+        except Exception as e:
+            pass
