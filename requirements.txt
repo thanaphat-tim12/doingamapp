@@ -1,0 +1,8 @@
+streamlit
+pandas
+gspread
+reportlab
+pypdf
+firebase-admin
+google-cloud-firestore
+bcrypt
