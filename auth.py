@@ -21,7 +21,9 @@ def init_firebase():
                 cred = credentials.Certificate(cert_dict)
             else:
                 # ลองโหลดจาก secrets โดยตรง (กรณีไม่ได้ครอบด้วย gspread_credentials)
-                cert_dict = dict(st.secrets)
+                needed_keys = ["type", "project_id", "private_key_id", "private_key", "client_email", "client_id", "auth_uri", "token_uri", "auth_provider_x509_cert_url", "client_x509_cert_url"]
+                cert_dict = {k: st.secrets[k] for k in needed_keys if k in st.secrets}
+                
                 if "private_key" in cert_dict:
                     cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
                     cred = credentials.Certificate(cert_dict)
@@ -30,6 +32,10 @@ def init_firebase():
                     return
 
             firebase_admin.initialize_app(cred)
+            # แสดงข้อมูลเพื่อตรวจสอบ (เฉพาะเจ้าหน้าที่ที่เห็นหน้าล็อกอิน)
+            with st.sidebar:
+                st.caption("🔍 Firebase Debug Info")
+                st.code(f"Project: {firebase_admin.get_app().project_id}\nEmail: {firebase_admin.get_app().credential.service_account_email[:20]}...", language="text")
         except Exception as e:
             st.error(f"❌ โหลด Firebase ไม่สำเร็จ: {e}")
 
