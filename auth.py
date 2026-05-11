@@ -5,6 +5,14 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 import bcrypt
 import os
 
+def clean_private_key(pk):
+    if not isinstance(pk, str): return pk
+    pk = pk.strip()
+    # ถ้ามีการก๊อปปี้เครื่องหมายคำพูดติดมาด้วย ให้เอาออก
+    if (pk.startswith('"') and pk.endswith('"')) or (pk.startswith("'") and pk.endswith("'")):
+        pk = pk[1:-1]
+    return pk.replace("\\n", "\n")
+
 def init_firebase():
     # ลบการเชื่อมต่อเดิมทิ้งเพื่อบังคับโหลดค่าใหม่จาก Secrets (ป้องกันการจำค่าเก่าที่ผิด)
     for app_name in list(firebase_admin._apps.keys()):
@@ -17,10 +25,8 @@ def init_firebase():
         # 2. ถ้าไม่มีไฟล์ ให้โหลดจาก st.secrets
         elif "gspread_credentials" in st.secrets:
             source = st.secrets["gspread_credentials"]
-            # แปลงจาก Secrets เป็น dict
             cert_dict = dict(source)
-            # จัดการเรื่องขึ้นบรรทัดใหม่ใน private_key
-            cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
+            cert_dict["private_key"] = clean_private_key(cert_dict.get("private_key", ""))
             cred = credentials.Certificate(cert_dict)
         else:
             # ลองโหลดจาก secrets โดยตรง (กรณีไม่ได้ครอบด้วย gspread_credentials)
@@ -28,7 +34,7 @@ def init_firebase():
             cert_dict = {k: st.secrets[k] for k in needed_keys if k in st.secrets}
             
             if "private_key" in cert_dict:
-                cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
+                cert_dict["private_key"] = clean_private_key(cert_dict["private_key"])
                 cred = credentials.Certificate(cert_dict)
             else:
                 st.error("❌ ไม่พบข้อมูลการเชื่อมต่อ Firebase ใน Secrets")
