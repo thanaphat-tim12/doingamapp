@@ -205,20 +205,31 @@ def update_gsheet(row_idx, data_dict, sheet_name=None):
         else:
             sheet = sh.get_worksheet(0)
             
-        # Fetch current values to preserve columns not in data_dict
-        headers = [h.strip() for h in sheet.row_values(1)]
+        # ทำความสะอาดหัวตาราง: ตัดช่องว่าง และกรองเฉพาะคอลัมน์ที่มีชื่อ
+        raw_headers = sheet.row_values(1)
+        headers = [h.strip() if h else "" for h in raw_headers]
+        
+        # ตัดคอลัมน์ว่างท้ายตารางออก (ถ้ามี)
+        while headers and not headers[-1]:
+            headers.pop()
+            
         current_values = sheet.row_values(row_idx)
         
-        # Pad current_values if it's shorter than headers
+        # ปรับความยาว current_values ให้เท่ากับ headers
         if len(current_values) < len(headers):
             current_values.extend([""] * (len(headers) - len(current_values)))
+        elif len(current_values) > len(headers):
+            current_values = current_values[:len(headers)]
             
         update_values = []
         for i, h in enumerate(headers):
+            if not h: # ถ้าหัวตารางว่าง ให้ข้ามหรือใช้ค่าเดิม
+                update_values.append(current_values[i] if i < len(current_values) else "")
+                continue
+                
             if h in data_dict:
                 update_values.append(data_dict[h])
             else:
-                # Keep original value if not provided in update
                 update_values.append(current_values[i] if i < len(current_values) else "")
         
         try:
@@ -242,9 +253,14 @@ def add_gsheet(data_dict, sheet_name=None):
             sheet = sh.worksheet(sheet_name)
         else:
             sheet = sh.get_worksheet(0)
+
+        # ทำความสะอาดหัวตาราง และกรองคอลัมน์ว่างท้ายออก
+        raw_headers = sheet.row_values(1)
+        headers = [h.strip() if h else "" for h in raw_headers]
+        while headers and not headers[-1]:
+            headers.pop()
             
-        headers = [h.strip() for h in sheet.row_values(1)]
-        new_row = [data_dict.get(h, "") for h in headers]
+        new_row = [data_dict.get(h, "") if h else "" for h in headers]
         sheet.append_row(new_row)
         return True
     except Exception as e:
