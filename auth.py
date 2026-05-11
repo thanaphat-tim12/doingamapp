@@ -13,7 +13,7 @@ def init_firebase():
             # ดึงข้อมูลและจัดการเรื่องขึ้นบรรทัดใหม่ใน private_key
             cert_dict = {
                 "type": source["type"],
-                "project_id": source["project_id"],
+                "project_id": source["project_id"], # ใช้ ID จากกุญแจโดยตรง
                 "private_key_id": source["private_key_id"],
                 "private_key": source["private_key"].replace("\\n", "\n"),
                 "client_email": source["client_email"],
