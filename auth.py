@@ -3,35 +3,41 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 import bcrypt
+import os
 
 def init_firebase():
     if not firebase_admin._apps:
         try:
-            # ตรวจสอบว่าข้อมูลอยู่ในกลุ่ม gspread_credentials หรือไม่ (เพื่อรองรับการจัดกลุ่มใน Secrets)
-            source = st.secrets["gspread_credentials"] if "gspread_credentials" in st.secrets else st.secrets
-            
-            # ดึงข้อมูลและจัดการเรื่องขึ้นบรรทัดใหม่ใน private_key
-            cert_dict = {
-                "type": source["type"],
-                "project_id": source["project_id"], # ใช้ ID จากกุญแจโดยตรง
-                "private_key_id": source["private_key_id"],
-                "private_key": source["private_key"].replace("\\n", "\n"),
-                "client_email": source["client_email"],
-                "client_id": source["client_id"],
-                "auth_uri": source["auth_uri"],
-                "token_uri": source["token_uri"],
-                "auth_provider_x509_cert_url": source["auth_provider_x509_cert_url"],
-                "client_x509_cert_url": source["client_x509_cert_url"],
-                "universe_domain": source.get("universe_domain", "googleapis.com")
-            }
-            cred = credentials.Certificate(cert_dict)
+            # 1. ลองโหลดจากไฟล์ credentials.json ก่อน (เหมือนที่รันในเครื่องแล้วผ่าน)
+            if os.path.exists("credentials.json"):
+                cred = credentials.Certificate("credentials.json")
+            # 2. ถ้าไม่มีไฟล์ ให้โหลดจาก st.secrets
+            elif "gspread_credentials" in st.secrets:
+                source = st.secrets["gspread_credentials"]
+                # แปลงจาก Secrets เป็น dict
+                cert_dict = dict(source)
+                # จัดการเรื่องขึ้นบรรทัดใหม่ใน private_key
+                cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
+                cred = credentials.Certificate(cert_dict)
+            else:
+                # ลองโหลดจาก secrets โดยตรง (กรณีไม่ได้ครอบด้วย gspread_credentials)
+                cert_dict = dict(st.secrets)
+                if "private_key" in cert_dict:
+                    cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
+                    cred = credentials.Certificate(cert_dict)
+                else:
+                    st.error("❌ ไม่พบข้อมูลการเชื่อมต่อ Firebase ใน Secrets")
+                    return
+
             firebase_admin.initialize_app(cred)
         except Exception as e:
             st.error(f"❌ โหลด Firebase ไม่สำเร็จ: {e}")
 
 def get_db():
     try:
-        return firestore.client()
+        # บังคับใช้ Project ID จากแอปที่ Initialize ไว้เพื่อป้องกัน PermissionDenied บน Cloud
+        app = firebase_admin.get_app()
+        return firestore.client(project=app.project_id)
     except Exception as e:
         st.error(f"Error connecting to Firestore: {e}")
         return None
