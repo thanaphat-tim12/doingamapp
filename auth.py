@@ -8,10 +8,17 @@ import os
 def clean_private_key(pk):
     if not isinstance(pk, str): return pk
     pk = pk.strip()
+    
+    # ตรวจสอบเบื้องต้นว่าก๊อปปี้มาผิดหรือไม่
+    if pk.startswith('{'):
+        st.error("⚠️ คำเตือน: ข้อมูลในช่อง private_key ขึ้นต้นด้วย '{' เป็นไปได้ว่าคุณก๊อปปี้ไฟล์ JSON มาวางทั้งไฟล์ แทนที่จะเป็นแค่รหัสกุญแจครับ")
+    
     # ถ้ามีการก๊อปปี้เครื่องหมายคำพูดติดมาด้วย ให้เอาออก
     if (pk.startswith('"') and pk.endswith('"')) or (pk.startswith("'") and pk.endswith("'")):
         pk = pk[1:-1]
-    return pk.replace("\\n", "\n")
+    
+    # จัดการเรื่องขึ้นบรรทัดใหม่ (รองรับทั้งแบบ \n จริงๆ และแบบพิมพ์ตัวอักษร \ n)
+    return pk.replace("\\n", "\n").replace("\\\\n", "\n")
 
 def init_firebase():
     # ลบการเชื่อมต่อเดิมทิ้งเพื่อบังคับโหลดค่าใหม่จาก Secrets (ป้องกันการจำค่าเก่าที่ผิด)
