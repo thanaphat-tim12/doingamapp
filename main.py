@@ -307,7 +307,10 @@ def load_data():
             )
         return df, mapping, sheet_names
     except Exception as e:
-        st.error(f"❌ ไม่สามารถดึงข้อมูลได้ (Error: {str(e)})")
+        import traceback
+        st.error(f"❌ ไม่สามารถดึงข้อมูลได้ (รายละเอียด: {str(e)})")
+        with st.expander("ดู Error แบบละเอียด (สำหรับ Debug)"):
+            st.code(traceback.format_exc())
         return pd.DataFrame(), {}, []
 
 @st.cache_data(ttl=60)
@@ -334,6 +337,15 @@ if not auth.check_login():
     st.stop()
 
 df, cols, sheet_names = load_data()
+
+# ป้องกัน KeyError กรณีดึงข้อมูลไม่ได้
+if df.empty or not cols:
+    st.warning("⚠️ ไม่พบข้อมูลในระบบ หรือไม่สามารถเชื่อมต่อ Google Sheets ได้")
+    st.info("💡 คำแนะนำ: ตรวจสอบว่าได้ 'แชร์' Sheet ให้กับ Service Account หรือยัง และตรวจสอบการตั้งค่า Secrets")
+    if st.button("🔄 ลองโหลดข้อมูลใหม่อีกครั้ง"):
+        st.cache_data.clear()
+        st.rerun()
+    st.stop()
 
 with st.sidebar:
     st.title("🏛️ อบต.ดอยงาม (Online)")
