@@ -755,15 +755,26 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                 with tab1:
                                     st.subheader("จัดการข้อมูลและแก้ไขก่อนพิมพ์ (อภ.๒)")
                                     
-                                    old_exp = row[cols['expire']]
-                                    issue_default = old_exp.replace(year=datetime.now().year) if pd.notnull(old_exp) else datetime.now()
+                                    # ดึงค่าจากชีตมาตรงๆ ไม่ต้องคำนวณใหม่ (ตามคำขอผู้ใช้)
+                                    old_exp = row.get(cols['expire'])
+                                    old_issue = row.get(cols.get('rcpt_date', 'ลงวันที่'))
                                     
-                                    # วันหมดอายุใช้วันที่ก่อนวันออกใบอนุญาต แต่เพิ่มปีเป็นปีหน้า
+                                    # แปลงเป็น datetime object เพื่อใช้กับ date_input
                                     try:
-                                        expire_default = issue_default.replace(year=issue_default.year + 1) - timedelta(days=1)
-                                    except ValueError:
-                                        # จัดการกรณี 29 กุมภาพันธ์
-                                        expire_default = issue_default + timedelta(days=364)
+                                        if isinstance(old_issue, (pd.Timestamp, datetime)):
+                                            issue_default = old_issue.date()
+                                        else:
+                                            issue_default = datetime.strptime(str(old_issue).split(' ')[0], '%d/%m/%Y').date()
+                                    except:
+                                        issue_default = datetime.now().date()
+                                        
+                                    try:
+                                        if isinstance(old_exp, (pd.Timestamp, datetime)):
+                                            expire_default = old_exp.date()
+                                        else:
+                                            expire_default = datetime.strptime(str(old_exp).split(' ')[0], '%d/%m/%Y').date()
+                                    except:
+                                        expire_default = (issue_default + timedelta(days=365)).replace(day=issue_default.day) - timedelta(days=1)
                                     
                                     with st.container(border=True):
                                         col_f1, col_f2 = st.columns(2)
@@ -795,7 +806,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_rcpt_no = c_r4.text_input("ใบเสร็จเลขที่", value=str(row.get(cols['rcpt_no'], '')), key=f"p_no_{index}")
                                         
                                         c_d1, c_d2, c_d3 = st.columns(3)
-                                        p_rcpt_date = c_d1.date_input("ลงวันที่ (ใบเสร็จ)", value=datetime.now(), key=f"p_rcpt_date_{index}")
+                                        p_rcpt_date = c_d1.date_input("ลงวันที่ (ใบเสร็จ)", value=issue_default, key=f"p_rcpt_date_{index}")
                                         p_issue = c_d2.date_input("วันที่ออกใบอนุญาต", value=issue_default, key=f"p_issue_{index}")
                                         p_expire = c_d3.date_input("วันหมดอายุ", value=expire_default, key=f"p_expire_{index}")
 
