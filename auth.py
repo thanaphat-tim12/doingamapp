@@ -33,7 +33,10 @@ def init_firebase():
         elif "gspread_credentials" in st.secrets:
             source = st.secrets["gspread_credentials"]
             cert_dict = dict(source)
-            cert_dict["private_key"] = clean_private_key(cert_dict.get("private_key", ""))
+            pk = clean_private_key(cert_dict.get("private_key", ""))
+            safe_pk = f"{pk[:15]}...{pk[-15:]}" if len(pk) > 30 else f"Too Short ({len(pk)})"
+            st.info(f"🔑 กำลังลองเชื่อมต่อด้วยกุญแจ: {safe_pk} (ยาว: {len(pk)})")
+            cert_dict["private_key"] = pk
             cred = credentials.Certificate(cert_dict)
         else:
             # ลองโหลดจาก secrets โดยตรง (กรณีไม่ได้ครอบด้วย gspread_credentials)
@@ -41,7 +44,10 @@ def init_firebase():
             cert_dict = {k: st.secrets[k] for k in needed_keys if k in st.secrets}
             
             if "private_key" in cert_dict:
-                cert_dict["private_key"] = clean_private_key(cert_dict["private_key"])
+                pk = clean_private_key(cert_dict["private_key"])
+                safe_pk = f"{pk[:15]}...{pk[-15:]}" if len(pk) > 30 else f"Too Short ({len(pk)})"
+                st.info(f"🔑 กำลังลองเชื่อมต่อด้วยกุญแจ: {safe_pk} (ยาว: {len(pk)})")
+                cert_dict["private_key"] = pk
                 cred = credentials.Certificate(cert_dict)
             else:
                 st.error("❌ ไม่พบข้อมูลการเชื่อมต่อ Firebase ใน Secrets")
