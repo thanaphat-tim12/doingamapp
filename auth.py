@@ -7,19 +7,22 @@ import bcrypt
 def init_firebase():
     if not firebase_admin._apps:
         try:
-            # Create dict from st.secrets, excluding non-firebase keys
+            # ตรวจสอบว่าข้อมูลอยู่ในกลุ่ม gspread_credentials หรือไม่ (เพื่อรองรับการจัดกลุ่มใน Secrets)
+            source = st.secrets["gspread_credentials"] if "gspread_credentials" in st.secrets else st.secrets
+            
+            # ดึงข้อมูลและจัดการเรื่องขึ้นบรรทัดใหม่ใน private_key
             cert_dict = {
-                "type": st.secrets["type"],
-                "project_id": st.secrets["project_id"],
-                "private_key_id": st.secrets["private_key_id"],
-                "private_key": st.secrets["private_key"],
-                "client_email": st.secrets["client_email"],
-                "client_id": st.secrets["client_id"],
-                "auth_uri": st.secrets["auth_uri"],
-                "token_uri": st.secrets["token_uri"],
-                "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
-                "client_x509_cert_url": st.secrets["client_x509_cert_url"],
-                "universe_domain": st.secrets.get("universe_domain", "googleapis.com")
+                "type": source["type"],
+                "project_id": source["project_id"],
+                "private_key_id": source["private_key_id"],
+                "private_key": source["private_key"].replace("\\n", "\n"),
+                "client_email": source["client_email"],
+                "client_id": source["client_id"],
+                "auth_uri": source["auth_uri"],
+                "token_uri": source["token_uri"],
+                "auth_provider_x509_cert_url": source["auth_provider_x509_cert_url"],
+                "client_x509_cert_url": source["client_x509_cert_url"],
+                "universe_domain": source.get("universe_domain", "googleapis.com")
             }
             cred = credentials.Certificate(cert_dict)
             firebase_admin.initialize_app(cred)
