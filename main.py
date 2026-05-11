@@ -192,16 +192,21 @@ def get_gspread_client():
         st.error(f"❌ โหลดไฟล์กุญแจ (JSON) ไม่สำเร็จ: {e}")
         return None
 
-def update_gsheet(row_idx, data_dict):
+def update_gsheet(row_idx, data_dict, sheet_name=None):
     """Update a specific row in the Google Sheet based on row_idx (2-indexed)"""
     try:
         client = get_gspread_client()
         if not client: return False
         sh = client.open_by_url(SHEET_URL)
-        sheet = sh.get_worksheet(0)
         
+        # ใช้ sheet_name ที่ระบุ หรือถ้าไม่ระบุให้ใช้ sheet แรก
+        if sheet_name:
+            sheet = sh.worksheet(sheet_name)
+        else:
+            sheet = sh.get_worksheet(0)
+            
         # Fetch current values to preserve columns not in data_dict
-        headers = sheet.row_values(1)
+        headers = [h.strip() for h in sheet.row_values(1)]
         current_values = sheet.row_values(row_idx)
         
         # Pad current_values if it's shorter than headers
@@ -225,14 +230,20 @@ def update_gsheet(row_idx, data_dict):
         st.error(f"❌ อัปเดต Google Sheet ไม่สำเร็จ: {e}")
         return False
 
-def add_gsheet(data_dict):
+def add_gsheet(data_dict, sheet_name=None):
     """Append a new row to the Google Sheet"""
     try:
         client = get_gspread_client()
         if not client: return False
         sh = client.open_by_url(SHEET_URL)
-        sheet = sh.get_worksheet(0)
-        headers = sheet.row_values(1)
+        
+        # ใช้ sheet_name ที่ระบุ หรือถ้าไม่ระบุให้ใช้ sheet แรก
+        if sheet_name:
+            sheet = sh.worksheet(sheet_name)
+        else:
+            sheet = sh.get_worksheet(0)
+            
+        headers = [h.strip() for h in sheet.row_values(1)]
         new_row = [data_dict.get(h, "") for h in headers]
         sheet.append_row(new_row)
         return True
@@ -450,16 +461,28 @@ elif menu == "ค้นหา/จัดการข้อมูล":
     if st.session_state.get('show_add_form', False):
         with st.form("add_new"):
             st.subheader("➕ ลงทะเบียนผู้ประกอบการใหม่")
+            
+            # เพิ่มตัวเลือกให้เลือกว่าจะลงออกตรวจวันไหน (Sheet ไหน)
+            target_add_sheet = st.selectbox("เลือกวันที่ออกตรวจ (Sheet เป้าหมาย)", sheet_names, index=0)
+            
+            st.divider()
             c1, c2 = st.columns(2)
             new_entry = {}
             
-            # ใช้คอลัมน์จาก DataFrame จริงเพื่อให้ตรงกับ Excel
-            fields = df.columns.tolist()
+            # ดึงหัวตารางจาก Sheet ที่เลือกเพื่อให้กรอกข้อมูลได้ถูกต้อง
+            try:
+                temp_client = get_gspread_client()
+                temp_sh = temp_client.open_by_url(SHEET_URL)
+                temp_ws = temp_sh.worksheet(target_add_sheet)
+                fields = [h.strip() for h in temp_ws.row_values(1)]
+            except:
+                fields = df.columns.tolist()
             
-            # คำนวณลำดับถัดไป
+            # คำนวณลำดับถัดไป (อิงตามข้อมูลที่โหลดมาล่าสุด)
             next_seq = "1"
             if 'ลำดับ' in fields:
                 try:
+                    # พยายามหาลำดับสูงสุดจากข้อมูลที่แสดงอยู่
                     seqs = pd.to_numeric(df['ลำดับ'], errors='coerce').dropna()
                     if not seqs.empty:
                         next_seq = str(int(seqs.max()) + 1)
@@ -475,11 +498,11 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                     new_entry[f] = t.text_input(f, value="")
 
             if st.form_submit_button("💾 บันทึกข้อมูลลงชีต", type="primary"):
-                with st.spinner("กำลังเพิ่มข้อมูลลง Google Sheet..."):
-                    if add_gsheet(new_entry):
-                        st.success("✅ เพิ่มข้อมูลสำเร็จ!")
+                with st.spinner(f"กำลังเพิ่มข้อมูลลงชีต {target_add_sheet}..."):
+                    if add_gsheet(new_entry, sheet_name=target_add_sheet):
+                        st.success(f"✅ เพิ่มข้อมูลลงชีต '{target_add_sheet}' สำเร็จ!")
                         time.sleep(1)
-                        st.session_state['show_add_form'] = False  # Close the form
+                        st.session_state['show_add_form'] = False
                         st.cache_data.clear()
                         st.rerun()
                     else:
@@ -797,8 +820,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             }
                                             
                                             # Save to Google Sheet
-                                            with st.spinner("กำลังบันทึกข้อมูลลง Google Sheet..."):
-                                                if update_gsheet(index + 2, update_data):
+                                            with st.spinner(f"กำลังบันทึกข้อมูลลงชีต {target_sheet}..."):
+                                                if update_gsheet(index + 2, update_data, sheet_name=target_sheet):
                                                     st.toast("✅ บันทึกข้อมูลลงชีตเรียบร้อยแล้ว", icon="💾")
                                                 else:
                                                     st.error("⚠️ บันทึกข้อมูลลงชีตไม่สำเร็จ แต่จะดำเนินการสร้าง PDF ต่อ")
@@ -924,8 +947,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             edit_data[col_name] = col_ui.text_input(col_name, value=str(val))
                                             
                                     if st.form_submit_button("💾 บันทึกการแก้ไขลงชีต"):
-                                        with st.spinner("กำลังอัปเดตข้อมูล..."):
-                                            if update_gsheet(index + 2, edit_data):
+                                        with st.spinner(f"กำลังอัปเดตข้อมูลในชีต {target_sheet}..."):
+                                            if update_gsheet(index + 2, edit_data, sheet_name=target_sheet):
                                                 st.success("✅ บันทึกข้อมูลสำเร็จ!")
                                                 time.sleep(1)
                                                 st.cache_data.clear()
