@@ -251,6 +251,25 @@ def add_gsheet(data_dict, sheet_name=None):
         st.error(f"❌ เพิ่มข้อมูลลง Google Sheet ไม่สำเร็จ: {e}")
         return False
 
+def delete_gsheet_rows(row_indices, sheet_name=None):
+    """Delete rows by indices (1-indexed list) in reverse order"""
+    try:
+        client = get_gspread_client()
+        if not client: return False
+        sh = client.open_by_url(SHEET_URL)
+        if sheet_name:
+            sheet = sh.worksheet(sheet_name)
+        else:
+            sheet = sh.get_worksheet(0)
+            
+        # ลบจากล่างขึ้นบนเพื่อป้องกัน index เลื่อน
+        for idx in sorted(row_indices, reverse=True):
+            sheet.delete_rows(idx)
+        return True
+    except Exception as e:
+        st.error(f"❌ ลบข้อมูลไม่สำเร็จ: {e}")
+        return False
+
 def print_preview(title, content_html):
     html_template = f"""
     <html>
@@ -530,16 +549,33 @@ elif menu == "ค้นหา/จัดการข้อมูล":
 
                 with st.container(border=True):
                     # ส่วนหัวผู้ประกอบการ
-                    st.markdown(f"""
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                        <span style="font-size: 24px; color: #1E3A8A;">👤</span>
-                        <h3 style="color: #1E3A8A; margin: 0;">{u_name}</h3>
-                    </div>
-                    <div style="color: #4B5563; font-size: 14px; margin-bottom: 10px; margin-left: 35px;">
-                        💳 <b>นิติบุคคล/บัตรปชช:</b> {u_cid}<br>
-                        📍 <b>ที่อยู่:</b> บ้านเลขที่ {u_addr} หมู่ที่ {u_moo} | ☎ <b>โทร:</b> {u_phone}
-                    </div>
-                    """, unsafe_allow_html=True)
+                    col_h1, col_h2 = st.columns([5, 1])
+                    
+                    with col_h1:
+                        st.markdown(f"""
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <span style="font-size: 24px; color: #1E3A8A;">👤</span>
+                            <h3 style="color: #1E3A8A; margin: 0;">{u_name}</h3>
+                        </div>
+                        <div style="color: #4B5563; font-size: 14px; margin-bottom: 10px; margin-left: 35px;">
+                            💳 <b>นิติบุคคล/บัตรปชช:</b> {u_cid}<br>
+                            📍 <b>ที่อยู่:</b> บ้านเลขที่ {u_addr} หมู่ที่ {u_moo} | ☎ <b>โทร:</b> {u_phone}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col_h2:
+                        with st.popover("🗑️ ลบข้อมูล", use_container_width=True):
+                            st.warning(f"⚠️ ยืนยันการลบข้อมูลทั้งหมดของคุณ {u_name} หรือไม่? (รวม {num_licenses} รายการ)")
+                            st.write("การลบนี้จะลบข้อมูลออกจาก Google Sheet โดยตรงและไม่สามารถกู้คืนได้")
+                            if st.button("🔴 ยืนยันการลบทั้งหมด", key=f"confirm_del_{u_name}_{u_cid}", type="primary", use_container_width=True):
+                                with st.spinner("กำลังลบข้อมูล..."):
+                                    # คำนวณแถวที่ต้องลบ (df index + 2)
+                                    rows_to_delete = [int(idx) + 2 for idx in group_data.index]
+                                    if delete_gsheet_rows(rows_to_delete, sheet_name=target_sheet):
+                                        st.success(f"ลบข้อมูลของ {u_name} เรียบร้อยแล้ว")
+                                        time.sleep(1)
+                                        st.cache_data.clear()
+                                        st.rerun()
                     
                     if st.button(f"🖨️ พิมพ์ทุกใบอนุญาต ({num_licenses} ใบ)", key=f"print_all_{first_row.name}"):
                         st.session_state[f"do_print_all_{first_row.name}"] = True
