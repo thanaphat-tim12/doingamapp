@@ -205,11 +205,14 @@ def update_gsheet(row_idx, data_dict, sheet_name=None):
         else:
             sheet = sh.get_worksheet(0)
             
-        # ทำความสะอาดหัวตาราง: ตัดช่องว่าง และกรองเฉพาะคอลัมน์ที่มีชื่อ
-        raw_headers = sheet.row_values(1)
+        # หาแถวที่เป็นหัวตารางจริงๆ (แถวแรกที่มีข้อมูล)
+        all_rows = sheet.get_all_values()
+        if not all_rows: return False
+        
+        raw_headers = all_rows[0]
         headers = [h.strip() if h else "" for h in raw_headers]
         
-        # ตัดคอลัมน์ว่างท้ายตารางออก (ถ้ามี)
+        # ตัดคอลัมน์ว่างท้ายตารางออก
         while headers and not headers[-1]:
             headers.pop()
             
@@ -254,13 +257,20 @@ def add_gsheet(data_dict, sheet_name=None):
         else:
             sheet = sh.get_worksheet(0)
 
-        # ทำความสะอาดหัวตาราง และกรองคอลัมน์ว่างท้ายออก
-        raw_headers = sheet.row_values(1)
+        # หาหัวตาราง
+        all_rows = sheet.get_all_values()
+        if not all_rows: 
+            st.error("❌ ไม่พบข้อมูลใดๆ ในชีตนี้")
+            return False
+            
+        raw_headers = all_rows[0]
         headers = [h.strip() if h else "" for h in raw_headers]
         while headers and not headers[-1]:
             headers.pop()
             
         new_row = [data_dict.get(h, "") if h else "" for h in headers]
+        
+        # บันทึกข้อมูล
         sheet.append_row(new_row)
         return True
     except Exception as e:
@@ -422,6 +432,16 @@ if df.empty or not cols:
 
 with st.sidebar:
     st.title("🏛️ อบต.ดอยงาม (Online)")
+    
+    # ส่วนสำหรับ Debug (ซ่อนไว้ใน Expander)
+    with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
+        st.write(f"ชีตปัจจุบัน: {target_sheet}")
+        st.write("หัวตารางที่ระบบตรวจเจอ:")
+        st.code(list(df.columns))
+        if st.button("ล้างแคชและโหลดใหม่"):
+            st.cache_data.clear()
+            st.rerun()
+
     if not sheet_names:
         sheet_names = ["รวมกิจการ"]
     target_sheet = st.selectbox("เลือกชีตเป้าหมาย (ออกตรวจ)", sheet_names)
