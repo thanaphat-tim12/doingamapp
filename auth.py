@@ -34,8 +34,6 @@ def init_firebase():
             source = st.secrets["gspread_credentials"]
             cert_dict = dict(source)
             pk = clean_private_key(cert_dict.get("private_key", ""))
-            safe_pk = f"{pk[:15]}...{pk[-15:]}" if len(pk) > 30 else f"Too Short ({len(pk)})"
-            st.info(f"🔑 กำลังลองเชื่อมต่อด้วยกุญแจ: {safe_pk} (ยาว: {len(pk)})")
             cert_dict["private_key"] = pk
             cred = credentials.Certificate(cert_dict)
         else:
