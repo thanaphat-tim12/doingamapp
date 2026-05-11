@@ -310,6 +310,19 @@ def load_data():
         df = pd.DataFrame(raw_data[1:], columns=raw_data[0]).astype(str)
         df.columns = df.columns.str.strip()
         
+        # จัดการชื่อคอลัมน์ที่ซ้ำกัน (เพื่อป้องกัน Error ใน Streamlit/Arrow)
+        new_cols = []
+        counts = {}
+        for col in df.columns:
+            if not col: col = "Unnamed"
+            if col in counts:
+                counts[col] += 1
+                new_cols.append(f"{col}_{counts[col]}")
+            else:
+                counts[col] = 0
+                new_cols.append(col)
+        df.columns = new_cols
+        
         # Helper to find column name among synonyms
         def find_col(synonyms, default):
             for s in synonyms:
@@ -356,6 +369,20 @@ def load_sheet_data(sheet_name):
         raw_data = worksheet.get_all_values()
         if not raw_data: return pd.DataFrame()
         df = pd.DataFrame(raw_data[1:], columns=raw_data[0]).astype(str)
+        df.columns = df.columns.str.strip()
+        
+        # จัดการชื่อคอลัมน์ที่ซ้ำกัน
+        new_cols = []
+        counts = {}
+        for col in df.columns:
+            if not col: col = "Unnamed"
+            if col in counts:
+                counts[col] += 1
+                new_cols.append(f"{col}_{counts[col]}")
+            else:
+                counts[col] = 0
+                new_cols.append(col)
+        df.columns = new_cols
         return df
     except Exception as e:
         st.error(f"❌ ไม่สามารถดึงข้อมูลชีต {sheet_name} ได้: {str(e)}")
