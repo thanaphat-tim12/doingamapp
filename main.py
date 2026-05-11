@@ -433,7 +433,11 @@ if df.empty or not cols:
 with st.sidebar:
     st.title("🏛️ อบต.ดอยงาม (Online)")
     
-    # ส่วนสำหรับ Debug (ซ่อนไว้ใน Expander)
+    if not sheet_names:
+        sheet_names = ["รวมกิจการ"]
+    target_sheet = st.selectbox("เลือกชีตเป้าหมาย (ออกตรวจ)", sheet_names)
+    
+    # ส่วนสำหรับ Debug (ย้ายมาไว้หลังประกาศ target_sheet)
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
         st.write("หัวตารางที่ระบบตรวจเจอ:")
@@ -441,10 +445,6 @@ with st.sidebar:
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
-
-    if not sheet_names:
-        sheet_names = ["รวมกิจการ"]
-    target_sheet = st.selectbox("เลือกชีตเป้าหมาย (ออกตรวจ)", sheet_names)
     app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
     st.divider()
     menu = st.radio("เมนูหลัก", ["หน้าแรก (Dashboard)", "ค้นหา/จัดการข้อมูล", "📋 รายชื่อออกตรวจ"])
