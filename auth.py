@@ -16,29 +16,29 @@ def init_firebase():
             cred = credentials.Certificate("credentials.json")
         # 2. ถ้าไม่มีไฟล์ ให้โหลดจาก st.secrets
         elif "gspread_credentials" in st.secrets:
-                source = st.secrets["gspread_credentials"]
-                # แปลงจาก Secrets เป็น dict
-                cert_dict = dict(source)
-                # จัดการเรื่องขึ้นบรรทัดใหม่ใน private_key
+            source = st.secrets["gspread_credentials"]
+            # แปลงจาก Secrets เป็น dict
+            cert_dict = dict(source)
+            # จัดการเรื่องขึ้นบรรทัดใหม่ใน private_key
+            cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
+            cred = credentials.Certificate(cert_dict)
+        else:
+            # ลองโหลดจาก secrets โดยตรง (กรณีไม่ได้ครอบด้วย gspread_credentials)
+            needed_keys = ["type", "project_id", "private_key_id", "private_key", "client_email", "client_id", "auth_uri", "token_uri", "auth_provider_x509_cert_url", "client_x509_cert_url"]
+            cert_dict = {k: st.secrets[k] for k in needed_keys if k in st.secrets}
+            
+            if "private_key" in cert_dict:
                 cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
                 cred = credentials.Certificate(cert_dict)
             else:
-                # ลองโหลดจาก secrets โดยตรง (กรณีไม่ได้ครอบด้วย gspread_credentials)
-                needed_keys = ["type", "project_id", "private_key_id", "private_key", "client_email", "client_id", "auth_uri", "token_uri", "auth_provider_x509_cert_url", "client_x509_cert_url"]
-                cert_dict = {k: st.secrets[k] for k in needed_keys if k in st.secrets}
-                
-                if "private_key" in cert_dict:
-                    cert_dict["private_key"] = cert_dict["private_key"].replace("\\n", "\n")
-                    cred = credentials.Certificate(cert_dict)
-                else:
-                    st.error("❌ ไม่พบข้อมูลการเชื่อมต่อ Firebase ใน Secrets")
-                    return
+                st.error("❌ ไม่พบข้อมูลการเชื่อมต่อ Firebase ใน Secrets")
+                return
 
-            firebase_admin.initialize_app(cred)
-            # แสดงข้อมูลเพื่อตรวจสอบแบบชัดเจนที่ด้านบนหน้าจอ
-            st.warning(f"🔧 Firebase Debug: Project={firebase_admin.get_app().project_id} | Email={firebase_admin.get_app().credential.service_account_email[:30]}...")
-        except Exception as e:
-            st.error(f"❌ โหลด Firebase ไม่สำเร็จ: {e}")
+        firebase_admin.initialize_app(cred)
+        # แสดงข้อมูลเพื่อตรวจสอบแบบชัดเจนที่ด้านบนหน้าจอ
+        st.warning(f"🔧 Firebase Debug: Project={firebase_admin.get_app().project_id} | Email={firebase_admin.get_app().credential.service_account_email[:30]}...")
+    except Exception as e:
+        st.error(f"❌ โหลด Firebase ไม่สำเร็จ: {e}")
 
 def get_db():
     try:
