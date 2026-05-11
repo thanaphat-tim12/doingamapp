@@ -307,7 +307,7 @@ def load_data():
             )
         return df, mapping, sheet_names
     except Exception as e:
-        st.error(f"❌ ไม่สามารถดึงข้อมูลได้: {str(e)}")
+        st.error(f"❌ ไม่สามารถดึงข้อมูลได้ (Error: {str(e)})")
         return pd.DataFrame(), {}, []
 
 @st.cache_data(ttl=60)
