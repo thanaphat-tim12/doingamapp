@@ -168,15 +168,25 @@ def get_gspread_client():
     try:
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         
-        # สำหรับ Streamlit Cloud: ตรวจสอบจาก st.secrets ก่อน
+        # สำหรับ Streamlit Cloud: ตรวจสอบจาก st.secrets
         if "gspread_credentials" in st.secrets:
             return gspread.service_account_from_dict(dict(st.secrets["gspread_credentials"]), scopes=scope)
+        
+        # ตรวจสอบว่ามีข้อมูลกุญแจอยู่ที่ top-level ของ secrets หรือไม่ (กรณีวางแบบไม่ครอบบล็อก)
+        cert_dict = dict(st.secrets)
+        if "private_key" in cert_dict:
+            # ทำความสะอาด private_key (ลบช่องว่าง/จัดการ newline)
+            pk = cert_dict["private_key"]
+            if isinstance(pk, str):
+                pk = pk.strip().replace("\\n", "\n")
+            cert_dict["private_key"] = pk
+            return gspread.service_account_from_dict(cert_dict, scopes=scope)
             
         # ถ้าไม่มีใน secrets (เช่น รันในเครื่องตัวเอง) ให้โหลดจากไฟล์
         if os.path.exists(SERVICE_ACCOUNT_FILE):
             return gspread.service_account(filename=SERVICE_ACCOUNT_FILE, scopes=scope)
         else:
-            st.error(f"❌ ไม่พบไฟล์กุญแจ {SERVICE_ACCOUNT_FILE} และไม่พบใน st.secrets")
+            st.error(f"❌ ไม่พบข้อมูลการเชื่อมต่อทั้งใน st.secrets และไฟล์ {SERVICE_ACCOUNT_FILE}")
             return None
     except Exception as e:
         st.error(f"❌ โหลดไฟล์กุญแจ (JSON) ไม่สำเร็จ: {e}")

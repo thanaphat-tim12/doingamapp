@@ -45,8 +45,6 @@ def init_firebase():
             
             if "private_key" in cert_dict:
                 pk = clean_private_key(cert_dict["private_key"])
-                safe_pk = f"{pk[:15]}...{pk[-15:]}" if len(pk) > 30 else f"Too Short ({len(pk)})"
-                st.info(f"🔑 กำลังลองเชื่อมต่อด้วยกุญแจ: {safe_pk} (ยาว: {len(pk)})")
                 cert_dict["private_key"] = pk
                 cred = credentials.Certificate(cert_dict)
             else:
@@ -54,8 +52,6 @@ def init_firebase():
                 return
 
         firebase_admin.initialize_app(cred)
-        # แสดงข้อมูลเพื่อตรวจสอบแบบชัดเจนที่ด้านบนหน้าจอ
-        st.warning(f"🔧 Firebase Debug: Project={firebase_admin.get_app().project_id} | Email={firebase_admin.get_app().credential.service_account_email[:30]}...")
     except Exception as e:
         st.error(f"❌ โหลด Firebase ไม่สำเร็จ: {e}")
 
