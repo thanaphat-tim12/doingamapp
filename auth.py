@@ -6,13 +6,16 @@ import bcrypt
 import os
 
 def init_firebase():
-    if not firebase_admin._apps:
-        try:
-            # 1. ลองโหลดจากไฟล์ credentials.json ก่อน (เหมือนที่รันในเครื่องแล้วผ่าน)
-            if os.path.exists("credentials.json"):
-                cred = credentials.Certificate("credentials.json")
-            # 2. ถ้าไม่มีไฟล์ ให้โหลดจาก st.secrets
-            elif "gspread_credentials" in st.secrets:
+    # ลบการเชื่อมต่อเดิมทิ้งเพื่อบังคับโหลดค่าใหม่จาก Secrets (ป้องกันการจำค่าเก่าที่ผิด)
+    for app_name in list(firebase_admin._apps.keys()):
+        firebase_admin.delete_app(firebase_admin._apps[app_name])
+        
+    try:
+        # 1. ลองโหลดจากไฟล์ credentials.json ก่อน
+        if os.path.exists("credentials.json"):
+            cred = credentials.Certificate("credentials.json")
+        # 2. ถ้าไม่มีไฟล์ ให้โหลดจาก st.secrets
+        elif "gspread_credentials" in st.secrets:
                 source = st.secrets["gspread_credentials"]
                 # แปลงจาก Secrets เป็น dict
                 cert_dict = dict(source)
@@ -32,10 +35,8 @@ def init_firebase():
                     return
 
             firebase_admin.initialize_app(cred)
-            # แสดงข้อมูลเพื่อตรวจสอบ (เฉพาะเจ้าหน้าที่ที่เห็นหน้าล็อกอิน)
-            with st.sidebar:
-                st.caption("🔍 Firebase Debug Info")
-                st.code(f"Project: {firebase_admin.get_app().project_id}\nEmail: {firebase_admin.get_app().credential.service_account_email[:20]}...", language="text")
+            # แสดงข้อมูลเพื่อตรวจสอบแบบชัดเจนที่ด้านบนหน้าจอ
+            st.warning(f"🔧 Firebase Debug: Project={firebase_admin.get_app().project_id} | Email={firebase_admin.get_app().credential.service_account_email[:30]}...")
         except Exception as e:
             st.error(f"❌ โหลด Firebase ไม่สำเร็จ: {e}")
 
