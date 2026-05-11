@@ -628,8 +628,22 @@ elif menu == "ค้นหา/จัดการข้อมูล":
     search = st.text_input("🔍 ค้นหาชื่อ หรือ เลขบัตร...", placeholder="เช่น 3570500xxxxxx")
     if search:
         search_term = search.strip().replace('-', '').replace(' ', '')
-        results = df[df[cols['name']].str.replace(' ', '').str.contains(search_term, na=False) | 
-                     df[cols['cid']].str.replace('-', '').str.replace(' ', '').str.contains(search_term, na=False)]
+        
+        # 1. ลองค้นหาจากคอลัมน์หลักก่อน (ชื่อ และ เลขบัตร)
+        mask = pd.Series(False, index=df.index)
+        
+        if cols['name'] in df.columns:
+            mask |= df[cols['name']].str.replace(' ', '').str.contains(search_term, na=False)
+        if cols['cid'] in df.columns:
+            mask |= df[cols['cid']].str.replace('-', '').str.replace(' ', '').str.contains(search_term, na=False)
+            
+        results = df[mask]
+        
+        # 2. ถ้าไม่เจอ ให้ลองค้นหาจาก "ทุกคอลัมน์" (Global Search)
+        if results.empty:
+            results = df[df.apply(lambda row: row.astype(str).str.replace(' ', '').str.contains(search_term, na=False).any(), axis=1)]
+            if not results.empty:
+                st.info("💡 หมายเหตุ: พบข้อมูลจากการค้นหาทุกคอลัมน์ (หัวตารางอาจไม่ตรงตามมาตรฐาน)")
         
         if not results.empty:
             grouped = results.groupby(cols['name'], dropna=False)
