@@ -35,9 +35,7 @@ def init_firebase():
 
 def get_db():
     try:
-        # บังคับใช้ Project ID จากแอปที่ Initialize ไว้เพื่อป้องกัน PermissionDenied บน Cloud
-        app = firebase_admin.get_app()
-        return firestore.client(project=app.project_id)
+        return firestore.client()
     except Exception as e:
         st.error(f"Error connecting to Firestore: {e}")
         return None
