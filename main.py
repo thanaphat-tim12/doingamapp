@@ -469,12 +469,25 @@ with st.sidebar:
 # --- หน้า Dashboard ---
 if menu == "หน้าแรก (Dashboard)":
     st.header(f"📊 สรุปข้อมูล: {app_category}")
-    if not df.empty and cols['type'] in df.columns:
-        f_df = df.copy() if app_category == "ทั้งหมด" else df[df[cols['type']].str.contains(app_category, na=False)].copy()
-        today = datetime.now()
-        near_date = today + timedelta(days=90)
-        expired_df = f_df[f_df[cols['expire']] < today]
-        near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
+    if not df.empty:
+        # กรองประเภทกิจการ
+        f_df = df.copy()
+        if cols['type'] in df.columns and app_category != "ทั้งหมด":
+            f_df = df[df[cols['type']].str.contains(app_category, na=False)].copy()
+            
+        expired_df = pd.DataFrame()
+        near_exp_df = pd.DataFrame()
+        
+        # กรองข้อมูลวันหมดอายุ (ถ้ามี)
+        if cols['expire'] in f_df.columns:
+            # แปลงวันที่ถ้ายังไม่ได้แปลง
+            if not pd.api.types.is_datetime64_any_dtype(f_df[cols['expire']]):
+                f_df[cols['expire']] = pd.to_datetime(f_df[cols['expire']], format='%d/%m/%Y', errors='coerce')
+                
+            today = datetime.now()
+            near_date = today + timedelta(days=90)
+            near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
+            expired_df = f_df[f_df[cols['expire']] < today]
         
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("ผู้ประกอบกิจการ", f"{f_df[cols['cid']].nunique() if cols['cid'] in f_df.columns else 0}")
@@ -492,13 +505,24 @@ elif menu == "ค้นหา/จัดการข้อมูล":
     
     # ส่วนแจ้งเตือนใกล้หมดอายุ (ย้ายมาไว้ที่นี่)
     with st.expander("🔔 ตรวจสอบรายชื่อใกล้หมดอายุ และที่หมดอายุแล้ว", expanded=False):
-        f_df = df.copy() if app_category == "ทั้งหมด" else df[df[cols['type']].str.contains(app_category, na=False)].copy()
-        today = datetime.now()
-        near_date = today + timedelta(days=90)
+        f_df = df.copy()
+        if cols['type'] in df.columns and app_category != "ทั้งหมด":
+            f_df = df[df[cols['type']].str.contains(app_category, na=False)].copy()
+            
+        expired_df = pd.DataFrame()
+        near_exp_df = pd.DataFrame()
         
-        # แยกเป็น 2 กลุ่ม
-        near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
-        expired_df = f_df[f_df[cols['expire']] < today]
+        if cols['expire'] in f_df.columns:
+            # แปลงวันที่ถ้ายังไม่ได้แปลง
+            if not pd.api.types.is_datetime64_any_dtype(f_df[cols['expire']]):
+                f_df[cols['expire']] = pd.to_datetime(f_df[cols['expire']], format='%d/%m/%Y', errors='coerce')
+                
+            today = datetime.now()
+            near_date = today + timedelta(days=90)
+            near_exp_df = f_df[(f_df[cols['expire']] >= today) & (f_df[cols['expire']] <= near_date)]
+            expired_df = f_df[f_df[cols['expire']] < today]
+        else:
+            st.info("ℹ️ ชีตนี้ไม่มีคอลัมน์วันหมดอายุ ระบบจึงไม่สามารถแจ้งเตือนได้")
         
         if len(near_exp_df) > 0 or len(expired_df) > 0:
             if len(expired_df) > 0:
