@@ -646,7 +646,10 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                         next_seq = str(int(seqs.max()) + 1)
                 except: pass
 
-            for i, f in enumerate(fields):
+            # กรองฟิลด์ที่ไม่ต้องการแสดงผล (Unnamed หรือไฟล์)
+            visible_fields = [f for f in fields if f and not f.startswith('Unnamed') and f not in ['ไฟล์', 'ไฟล์แนบ']]
+            
+            for i, f in enumerate(visible_fields):
                 t = c1 if i % 2 == 0 else c2
                 if f == 'ลำดับ':
                     new_entry[f] = t.text_input(f, value=next_seq)
@@ -1100,7 +1103,10 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                     c_e1, c_e2 = st.columns(2)
                                     
                                     edit_data = {}
-                                    for i, col_name in enumerate(df.columns):
+                                    # กรองเอาเฉพาะคอลัมน์ที่มีชื่อ และไม่เป็น Unnamed หรือคอลัมน์ไฟล์
+                                    visible_cols = [c for c in df.columns if c and not c.startswith('Unnamed') and c not in ['ไฟล์', 'ไฟล์แนบ']]
+                                    
+                                    for i, col_name in enumerate(visible_cols):
                                         col_ui = c_e1 if i % 2 == 0 else c_e2
                                         val = row.get(col_name, "")
                                         if pd.isna(val) or str(val).lower() == "nan": val = ""
