@@ -7,6 +7,8 @@ import os
 import io
 import streamlit.components.v1 as components
 import time
+import requests
+import base64
 
 # PDF generation libraries
 from reportlab.pdfgen import canvas
@@ -163,7 +165,7 @@ def create_app_pdf_overlay(data):
 # --- ส่วนที่ 1: การตั้งค่าการเชื่อมต่อและ API ---
 SERVICE_ACCOUNT_FILE = 'credentials.json' 
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1t_xTI0RvXTUsUAJOvqgs1RFKsDK5f5qPCOPOvIqeMrw/edit"
-
+GAS_URL = "https://script.google.com/macros/s/AKfycbxZ3Q1mk0hN69bmxctlOR95yKYC6hMP2BwaTXQn9WaX5edP09nUAKKv20N_kX-KzJg/exec"
 def get_gspread_client():
     try:
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -277,6 +279,45 @@ def add_gsheet(data_dict, sheet_name=None):
         st.error(f"❌ เพิ่มข้อมูลลง Google Sheet ไม่สำเร็จ: {e}")
         return False
 
+def upload_to_gdrive(file, folder_name, row_idx, sheet_name):
+    """Upload file to Google Drive via Google Apps Script and update the sheet"""
+    if not GAS_URL:
+        st.error("⚠️ ยังไม่ได้ตั้งค่า GAS_URL กรุณาตั้งค่าในโค้ดก่อนใช้งาน")
+        return False
+        
+    try:
+        # Get Sheet ID from URL
+        sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
+        
+        # Prepare file data
+        file_bytes = file.read()
+        file_b64 = base64.b64encode(file_bytes).decode('utf-8')
+        
+        payload = {
+            "fileName": file.name,
+            "fileData": file_b64,
+            "mimeType": file.type,
+            "folderName": folder_name,
+            "sheetId": sheet_id,
+            "sheetName": sheet_name,
+            "rowIdx": row_idx # GAS is 1-indexed
+        }
+        
+        with st.spinner("กำลังอัปโหลดไฟล์ไปยัง Google Drive..."):
+            response = requests.post(GAS_URL, json=payload)
+            result = response.json()
+            
+            if result.get("status") == "success":
+                st.success(f"✅ อัปโหลดไฟล์ '{file.name}' สำเร็จ!")
+                st.info(f"🔗 ลิงก์ไฟล์: {result.get('url')}")
+                return True
+            else:
+                st.error(f"❌ อัปโหลดไม่สำเร็จ: {result.get('message')}")
+                return False
+    except Exception as e:
+        st.error(f"❌ เกิดข้อผิดพลาดในการเชื่อมต่อ GAS: {e}")
+        return False
+
 def delete_gsheet_rows(row_indices, sheet_name=None):
     """Delete rows by indices (1-indexed list) in reverse order"""
     try:
@@ -373,7 +414,8 @@ def load_data(sheet_name=None):
             'phone': find_col(['โทรศัพท์', 'เบอร์โทร', 'หมายเลขโทรศัพท์'], 'โทรศัพท์'),
             'rcpt_book': find_col(['ใบเสร็จรับเงินเล่มที่', 'เล่มที่'], 'ใบเสร็จรับเงินเล่มที่'),
             'rcpt_no': find_col(['เลขที่', 'เลขที่ใบเสร็จ'], 'เลขที่'),
-            'rcpt_date': find_col(['ลงวันที่', 'วันที่รับเงิน'], 'ลงวันที่')
+            'rcpt_date': find_col(['ลงวันที่', 'วันที่รับเงิน'], 'ลงวันที่'),
+            'attachment': find_col(['ไฟล์แนบ', 'เอกสารแนบ', 'attachments'], 'ไฟล์แนบ')
         }
         if mapping['expire'] in df.columns:
             df[mapping['expire']] = pd.to_datetime(df[mapping['expire']], dayfirst=True, errors='coerce')
@@ -795,7 +837,14 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                             c1, c2, c3, c4 = st.columns([1.5, 1.5, 1.5, 5])
                             if c1.button("🔄 ต่ออายุ", key=f"ed_{index}", use_container_width=True): st.session_state[f"m_{index}"] = "edit"
                             if c2.button("📜 พิมพ์ใบอนุญาต", key=f"pr_{index}", use_container_width=True): st.session_state[f"m_{index}"] = "print"
-                            c3.file_uploader("📁 สแกน", key=f"up_{index}", label_visibility="collapsed")
+                            uploaded_file = c3.file_uploader("📁 สแกน", key=f"up_{index}", label_visibility="collapsed")
+                            if uploaded_file:
+                                if st.button("📤 อัปโหลด", key=f"btn_up_{index}", use_container_width=True):
+                                    # แถวใน Sheet คือ index + 2
+                                    sheet_row = int(index) + 2
+                                    if upload_to_gdrive(uploaded_file, person_name, sheet_row, target_sheet):
+                                        st.cache_data.clear()
+                                        st.rerun()
                             
                             if st.session_state.get(f"m_{index}") == "print":
                                 tab1, tab2, tab3 = st.tabs(["📄 ใบอนุญาต (อภ.๒)", "📝 คำขอ", "📋 แบบตรวจ"])
