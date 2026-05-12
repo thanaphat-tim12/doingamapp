@@ -408,7 +408,7 @@ def load_data(sheet_name=None):
             'shop': find_col(['ชื่อสถานประกอบการ', 'ชื่อร้าน'], 'ชื่อสถานประกอบการ'),
             'expire': find_col(['วันหมดอายุใบอนุญาต', 'วันหมดอายุ'], 'วันหมดอายุใบอนุญาต'),
             'fee': find_col(['ค่าธรรมเนียม', 'จำนวนเงิน'], 'ค่าธรรมเนียม'),
-            'type': find_col(['ประเภทกิจการ', 'ประเภท'], 'ประเภทกิจการ'),
+            'type': find_col(['ประเภทการทำกิจการ', 'ประเภทกิจการ', 'ประเภท'], 'ประเภทกิจการ'),
             'address': find_col(['ที่อยู่เลขที่', 'สำนักงาน/บ้าน เลขที่', 'สำนักงาน/บ้านเลขที่', 'ที่อยู่/บ้านเลขที่', 'ตั้งอยู่เลขที่', 'บ้านเลขที่'], 'สำนักงาน/บ้านเลขที่'),
             'moo': find_col(['หมู่ที่', 'หมู่'], 'หมู่ที่'),
             'phone': find_col(['โทรศัพท์', 'เบอร์โทร', 'หมายเลขโทรศัพท์'], 'โทรศัพท์'),
@@ -883,7 +883,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_phone = col_f2.text_input("โทรศัพท์", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"p_phone_{index}")
                                         
                                         p_shop = col_f1.text_input("ชื่อสถานประกอบการ", value=row.get(cols['shop'], ''), key=f"p_shop_{index}")
-                                        p_type = col_f2.text_input("ประเภทกิจการ", value=row.get(cols['type'], ''), key=f"p_type_{index}")
+                                        p_type = col_f2.text_input("ประเภทการทำกิจการ", value=row.get(cols['type'], ''), key=f"p_type_{index}")
                                         
                                         p_addr = col_f1.text_input("ที่อยู่/บ้านเลขที่", value=row.get(cols['address'], ''), key=f"p_addr_{index}")
                                         p_moo = col_f2.text_input("หมู่ที่", value=row.get(cols['moo'], ''), key=f"p_moo_{index}")
@@ -979,7 +979,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         with st.container(border=True):
                                             col_a1, col_a2 = st.columns(2)
                                             
-                                            a_type = col_a1.text_input("ประเภทกิจการ", value=row.get(cols['type'], ''), key=f"a_type_{index}")
+                                            a_type = col_a1.text_input("ประเภทการทำกิจการ", value=row.get(cols['type'], ''), key=f"a_type_{index}")
                                             a_name = col_a2.text_input("ข้าพเจ้า (ชื่อผู้ขอ)", value=row.get(cols['name'], ''), key=f"a_name_{index}")
                                             
                                             a_age = col_a1.text_input("อายุ (ปี)", value="", key=f"a_age_{index}")
