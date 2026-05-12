@@ -415,7 +415,7 @@ def load_data(sheet_name=None):
             'rcpt_book': find_col(['ใบเสร็จรับเงินเล่มที่', 'เล่มที่'], 'ใบเสร็จรับเงินเล่มที่'),
             'rcpt_no': find_col(['เลขที่', 'เลขที่ใบเสร็จ'], 'เลขที่'),
             'rcpt_date': find_col(['ลงวันที่', 'วันที่รับเงิน'], 'ลงวันที่'),
-            'attachment': find_col(['ไฟล์แนบ', 'เอกสารแนบ', 'attachments'], 'ไฟล์แนบ')
+            'attachment': find_col(['ไฟล์', 'ไฟล์แนบ', 'เอกสารแนบ', 'attachments'], 'ไฟล์')
         }
         if mapping['expire'] in df.columns:
             df[mapping['expire']] = pd.to_datetime(df[mapping['expire']], dayfirst=True, errors='coerce')

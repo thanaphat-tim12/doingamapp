@@ -40,18 +40,19 @@ function doPost(e) {
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var colIdx = -1;
     
-    // Find "ไฟล์แนบ" column
+    // Find column name (look for "ไฟล์" or "ไฟล์แนบ")
     for (var i = 0; i < headers.length; i++) {
-      if (headers[i].toString().trim() === "ไฟล์แนบ") {
+      var headerName = headers[i].toString().trim();
+      if (headerName === "ไฟล์" || headerName === "ไฟล์แนบ") {
         colIdx = i + 1;
         break;
       }
     }
     
-    // If column doesn't exist, create it
+    // If column doesn't exist, create it as "ไฟล์"
     if (colIdx === -1) {
       colIdx = headers.length + 1;
-      sheet.getRange(1, colIdx).setValue("ไฟล์แนบ");
+      sheet.getRange(1, colIdx).setValue("ไฟล์");
     }
     
     // Set the file URL in the sheet
