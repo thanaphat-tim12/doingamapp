@@ -140,8 +140,8 @@ def create_app_pdf_overlay(data):
     if data.get('chk_6'): can.drawString(112, 261.0 - offset_y, "/")
     if data.get('chk_7'): can.drawString(112, 233.4 - offset_y, "/")
     
-   oved per user reques # Signature at bottom (moved left to prevent overlap)
-    # can.drawString(215, 122.8 - offset_y, str(data.get('p_name', ''))) # Remt to leave blank for manual signing
+    # Signature at bottom (moved left to prevent overlap)
+    # can.drawString(215, 122.8 - offset_y, str(data.get('p_name', ''))) # Removed per user request to leave blank for manual signing
     
     can.save()
     packet.seek(0)
