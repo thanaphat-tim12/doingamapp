@@ -35,18 +35,43 @@ def create_pdf_overlay(data):
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
     can.setFont('THSarabunNew', 12.0)
     
-    # Coordinates (x, y) from bottom-left corner
     base_h = 841.89
-    y_offset = 18.0 # Balanced offset (between 16 and 19.5)
     
-    # Exact coordinates mapping (Fine-tuned X and Y)
+    # ดึงค่าเงื่อนไขมาเช็คเพื่อเลือก Template
+    val_43 = str(data.get('p_43', '')).strip()
+    val_44 = str(data.get('p_44', '')).strip()
+    
+    # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
+    y_offset = 18.0
+    name_x = 285
+    cid_x = 165
+    shop_x = 230
+    receipt_y_diff = 388.0 # ระยะจากด้านบนถึงบรรทัดใบเสร็จ
+    
+    template_file = "template.pdf"
+    
+    # 2. ปรับเปลี่ยนพิกัดตามแต่ละ Template (แยกตั้งค่าที่นี่ได้เลย)
+    if val_43 and not val_44:
+        template_file = "template4.3.pdf"
+        # ตัวอย่างการปรับแยก: 
+        # y_offset = 20.0 
+        # name_x = 290
+    elif val_43 and val_44:
+        template_file = "template 4.2.pdf"
+        # ตัวอย่างการปรับแยก:
+        # y_offset = 15.0
+    else:
+        # พิกัดสำหรับ template.pdf (แบบปกติ)
+        pass
+
+    # 3. เริ่มการวาดข้อความโดยใช้ตัวแปรที่ตั้งไว้
     y1 = base_h - 200.17 - y_offset
     can.drawString(90, y1, str(data.get('p_license_book', '')))
     can.drawString(155, y1, str(data.get('p_license_no', '')))
     can.drawString(210, y1, str(data.get('p_license_year', '')))
     
     y2 = base_h - 225.66 - y_offset
-    can.drawString(285, y2, str(data.get('p_name', '')))
+    can.drawString(name_x, y2, str(data.get('p_name', '')))
     can.drawString(510, y2, str(data.get('p_nationality', '')))
     
     y3 = base_h - 245.16 - y_offset
@@ -54,11 +79,11 @@ def create_pdf_overlay(data):
     can.drawString(205, y3, str(data.get('p_moo', '')))
     
     y4 = base_h - 264.66 - y_offset
-    can.drawString(165, y4, format_cid(data.get('p_cid', '')))
+    can.drawString(cid_x, y4, format_cid(data.get('p_cid', '')))
     can.drawString(380, y4, str(data.get('p_phone', '')))
     
     y5 = base_h - 290.16 - y_offset
-    can.drawString(230, y5, str(data.get('p_shop', '')))
+    can.drawString(shop_x, y5, str(data.get('p_shop', '')))
     
     y6 = base_h - 309.66 - y_offset
     can.drawString(110, y6, str(data.get('p_type', '')))
@@ -74,7 +99,7 @@ def create_pdf_overlay(data):
     can.drawString(240, y9, str(data.get('p_fee', '')))
     can.drawString(330, y9, str(data.get('p_fee_text', '')))
     
-    y10 = base_h - 388.0 - y_offset # Raised to avoid overlapping line (2)
+    y10 = base_h - receipt_y_diff - y_offset
     rcpt_book = str(data.get('p_rcpt_book', '')).strip()
     rcpt_no = str(data.get('p_rcpt_no', '')).strip()
     rcpt_combined = rcpt_book
@@ -97,35 +122,22 @@ def create_pdf_overlay(data):
     can.drawString(360, y12, str(data.get('expire_month', '')))
     can.drawString(455, y12, str(data.get('expire_year', '')))
     
-    # Draw 4.3 and 4.4 if provided
-    val_43 = str(data.get('p_43', '')).strip()
-    val_44 = str(data.get('p_44', '')).strip()
-    
     if val_43:
-        can.drawString(225, base_h - 578, val_43) # Slightly adjusted X
+        can.drawString(225, base_h - 578, val_43)
     if val_44:
-        can.drawString(225, base_h - 600, val_44) # Slightly adjusted X
+        can.drawString(225, base_h - 600, val_44)
     
     can.save()
     packet.seek(0)
     
     new_pdf = PdfReader(packet)
     
-    # Choose template based on user requirements
-    template_file = "template.pdf"
-    if val_43 and not val_44:
-        template_file = "template4.3.pdf"
-    elif val_43 and val_44:
-        template_file = "template 4.2.pdf"
-        
     try:
         existing_pdf = PdfReader(open(template_file, "rb"))
     except Exception as e:
-        # Fallback to main template if specific one is missing
         existing_pdf = PdfReader(open("template.pdf", "rb"))
         
     output = PdfWriter()
-    
     page = existing_pdf.pages[0]
     page.merge_page(new_pdf.pages[0])
     output.add_page(page)
