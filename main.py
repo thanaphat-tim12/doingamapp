@@ -37,7 +37,7 @@ def create_pdf_overlay(data):
     
     # Coordinates (x, y) from bottom-left corner
     base_h = 841.89
-    y_offset = 19.5 # Adjusted based on feedback (between 14 and 26)
+    y_offset = 16.0 # Raised slightly (reduced from 19.5)
     
     # Exact coordinates mapping (Adjusted X to be more to the right)
     y1 = base_h - 200.17 - y_offset
@@ -102,9 +102,9 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     if val_43:
-        can.drawString(190, base_h - 578, val_43) # Corrected X and Y
+        can.drawString(230, base_h - 578, val_43) # Shifted right (X=230)
     if val_44:
-        can.drawString(190, base_h - 600, val_44) # Corrected X and Y
+        can.drawString(230, base_h - 600, val_44) # Shifted right (X=230)
     
     can.save()
     packet.seek(0)
