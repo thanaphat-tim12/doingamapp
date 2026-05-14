@@ -47,6 +47,7 @@ def create_pdf_overlay(data):
     cid_x = 165
     shop_x = 230
     receipt_y_diff = 388.0 # ระยะจากด้านบนถึงบรรทัดใบเสร็จ
+    date_x = 300 # พิกัด X เริ่มต้นสำหรับ วัน/เดือน/ปี ของบรรทัดออกใบอนุญาต/หมดอายุ
     
     template_file = "template.pdf"
     
@@ -61,8 +62,13 @@ def create_pdf_overlay(data):
         # ตัวอย่างการปรับแยก:
         # y_offset = 15.0
     else:
-        # พิกัดสำหรับ template.pdf (แบบปกติ)
-        pass
+        # พิกัดสำหรับ template.pdf (แบบปกติ) - ปรับจูนให้ตรงเป๊ะ
+        y_offset = 18.7
+        name_x = 275
+        cid_x = 155
+        shop_x = 220
+        receipt_y_diff = 380.0
+        date_x = 285 # ขยับมาทางซ้ายสำหรับแบบปกติ
 
     # 3. เริ่มการวาดข้อความโดยใช้ตัวแปรที่ตั้งไว้
     y1 = base_h - 200.17 - y_offset
@@ -113,14 +119,14 @@ def create_pdf_overlay(data):
     can.drawString(365, y10, str(data.get('p_rcpt_date', '')))
     
     y11 = base_h - 594.66 - y_offset
-    can.drawString(300, y11, str(data.get('issue_day', '')))
-    can.drawString(360, y11, str(data.get('issue_month', '')))
-    can.drawString(455, y11, str(data.get('issue_year', '')))
+    can.drawString(date_x, y11, str(data.get('issue_day', '')))
+    can.drawString(date_x + 60, y11, str(data.get('issue_month', '')))
+    can.drawString(date_x + 155, y11, str(data.get('issue_year', '')))
     
     y12 = base_h - 620.16 - y_offset
-    can.drawString(300, y12, str(data.get('expire_day', '')))
-    can.drawString(360, y12, str(data.get('expire_month', '')))
-    can.drawString(455, y12, str(data.get('expire_year', '')))
+    can.drawString(date_x, y12, str(data.get('expire_day', '')))
+    can.drawString(date_x + 60, y12, str(data.get('expire_month', '')))
+    can.drawString(date_x + 155, y12, str(data.get('expire_year', '')))
     
     if val_43:
         can.drawString(225, base_h - 578, val_43)
