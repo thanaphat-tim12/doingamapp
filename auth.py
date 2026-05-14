@@ -223,9 +223,19 @@ def check_login():
                 
                 if admin_submit:
                     # Check password from secrets
+                    correct_pw = None
+                    # 1. ลองหาที่ระดับนอกสุด
                     if 'admin_password' in st.secrets:
                         correct_pw = st.secrets['admin_password']
-                    else:
+                    # 2. ลองหาในก้อน gspread_credentials (เผื่อคุณพิมพ์ต่อท้ายในกลุ่มนั้น)
+                    elif 'gspread_credentials' in st.secrets:
+                        # ตรวจสอบว่า st.secrets['gspread_credentials'] เป็น dict หรือไม่
+                        try:
+                            if 'admin_password' in st.secrets['gspread_credentials']:
+                                correct_pw = st.secrets['gspread_credentials']['admin_password']
+                        except: pass
+                    
+                    if not correct_pw:
                         correct_pw = 'admin1234' # Fallback default
                         
                     if admin_password.strip() == str(correct_pw).strip():
