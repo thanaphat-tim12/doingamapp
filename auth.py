@@ -141,7 +141,7 @@ def check_login():
             <div style="background-color: white; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
                 <span style="font-size: 40px; color: #1a4980;">🏛️</span>
             </div>
-            <h3 style="color: white; font-weight: bold; margin-bottom: 5px;">ระบบทะเบียนกิจการที่เป็น<br>อันตรายต่อสุขภาพ</h3>
+            <h3 style="color: white; font-weight: bold; margin-bottom: 5px;">ระบบทะเบียนกิจการ</h3>
             <p style="color: #e2e8f0; font-size: 14px;">องค์การบริหารส่วนตำบลดอยงาม อำเภอพาน จังหวัดเชียงราย</p>
         </div>
         """, unsafe_allow_html=True)
@@ -250,7 +250,7 @@ def check_login():
     return False
 
 def admin_dashboard():
-    admin_css()
+    admin_css() 
     db = get_db()
     
     col1, col2 = st.columns([4, 1])
