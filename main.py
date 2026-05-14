@@ -37,7 +37,7 @@ def create_pdf_overlay(data):
     
     # Coordinates (x, y) from bottom-left corner
     base_h = 841.89
-    y_offset = 14.0 # Increased offset to lower text onto lines
+    y_offset = 26.0 # Significantly increased to fix the alignment issue
     
     # Exact coordinates mapping
     y1 = base_h - 200.17 - y_offset
@@ -102,9 +102,9 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     if val_43:
-        can.drawString(230, base_h - 558, val_43) # Slightly adjusted Y
+        can.drawString(230, base_h - 585, val_43) # Moved even lower to avoid overlap
     if val_44:
-        can.drawString(230, base_h - 580, val_44) # Slightly adjusted Y
+        can.drawString(230, base_h - 607, val_44) # Moved even lower to avoid overlap
     
     can.save()
     packet.seek(0)
