@@ -201,20 +201,20 @@ def update_gsheet(row_idx, data_dict, sheet_name=None):
         if not client: return False
         sh = client.open_by_url(SHEET_URL)
         
-        # ใช้ sheet_name ที่ระบุ หรือถ้าไม่ระบุให้ใช้ sheet แรก
+       
         if sheet_name:
             sheet = sh.worksheet(sheet_name)
         else:
             sheet = sh.get_worksheet(0)
             
-        # หาแถวที่เป็นหัวตารางจริงๆ (แถวแรกที่มีข้อมูล)
+     
         all_rows = sheet.get_all_values()
         if not all_rows: return False
         
         raw_headers = all_rows[0]
         headers = [h.strip() if h else "" for h in raw_headers]
         
-        # ตัดคอลัมน์ว่างท้ายตารางออก
+ 
         while headers and not headers[-1]:
             headers.pop()
             
@@ -488,6 +488,31 @@ with st.sidebar:
     # 3. โหลดข้อมูลจากชีตที่เลือกมาใช้งาน
     df, cols, _ = load_data(target_sheet)
     
+    app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
+    
+    # --- กรองประเภทกิจการ (Global Filter) ---
+    if app_category != "ทั้งหมด" and not df.empty:
+        search_terms = []
+        if app_category == "สถานประกอบกิจการ":
+            search_terms = ["สถานประกอบ"]
+        elif app_category == "จำหน่าย/สะสมอาหาร":
+            search_terms = ["จำหน่าย", "สะสมอาหาร"]
+        else:
+            search_terms = [app_category]
+            
+        type_cols = []
+        possible_cols = ['ประเภทกิจการ', 'ประเภทการทำกิจการ', 'ประเภท', cols.get('type')]
+        for pc in possible_cols:
+            if pc and pc in df.columns and pc not in type_cols:
+                type_cols.append(pc)
+        
+        if type_cols:
+            mask = pd.Series([False] * len(df), index=df.index)
+            for c in type_cols:
+                for term in search_terms:
+                    mask |= df[c].str.contains(term, na=False)
+            df = df[mask].copy()
+
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
@@ -496,10 +521,8 @@ with st.sidebar:
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
-            
-    app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
     st.divider()
-    menu = st.radio("เมนูหลัก", ["หน้าแรก (Dashboard)", "ค้นหา/จัดการข้อมูล", "📋 รายชื่อออกตรวจ"])
+    menu = st.radio("เมนูหลัก", ["หน้าแรก (Dashboard)", "ค้นหา/จัดการข้อมูล"])
     if st.button("🔄 อัปเดตข้อมูลใหม่"):
         st.cache_data.clear()
         st.rerun()
@@ -512,10 +535,8 @@ with st.sidebar:
 if menu == "หน้าแรก (Dashboard)":
     st.header(f"📊 สรุปข้อมูล: {app_category}")
     if not df.empty:
-        # กรองประเภทกิจการ
-        f_df = df.copy()
-        if cols['type'] in df.columns and app_category != "ทั้งหมด":
-            f_df = df[df[cols['type']].str.contains(app_category, na=False)].copy()
+        # ใช้ df ที่ถูกกรองมาแล้วจากระดับ Global
+        f_df = df
             
         expired_df = pd.DataFrame()
         near_exp_df = pd.DataFrame()
@@ -538,8 +559,30 @@ if menu == "หน้าแรก (Dashboard)":
         c4.metric("ใกล้หมดอายุ (90 วัน)", f"{len(near_exp_df)}")
         
         st.divider()
-        with st.expander("📁 ดูข้อมูลทั้งหมดในระบบ", expanded=True):
-            st.dataframe(f_df, use_container_width=True)
+        st.subheader(f"📋 รายชื่อผู้ประกอบการในชีต: {target_sheet}")
+        st.info(f"พบข้อมูลทั้งหมด {len(f_df)} รายการ (กรองตามประเภท: {app_category})")
+        
+        # Display the dataframe
+        st.dataframe(f_df, use_container_width=True)
+        
+        # Add download button
+        import io
+        buffer = io.BytesIO()
+        try:
+            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                safe_sheet_name = target_sheet[:31]
+                f_df.to_excel(writer, index=False, sheet_name=safe_sheet_name)
+            
+            st.download_button(
+                label="📥 ดาวน์โหลดรายชื่อนี้เป็นไฟล์ Excel",
+                data=buffer.getvalue(),
+                file_name=f"รายชื่อ_{target_sheet}_{datetime.now().strftime('%d%m%Y')}.xlsx",
+                mime="application/vnd.ms-excel",
+                type="primary",
+                key="dl_dash"
+            )
+        except Exception as e:
+            pass
 
 # --- หน้าค้นหา/จัดการข้อมูล ---
 elif menu == "ค้นหา/จัดการข้อมูล":
@@ -1175,18 +1218,6 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                                 st.error("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง")
         else: st.warning("❌ ไม่พบข้อมูล")
 
-# --- หน้ารายชื่อออกตรวจ ---
-elif menu == "📋 รายชื่อออกตรวจ":
-    st.header(f"📋 รายชื่อผู้ประกอบการในชีต: {target_sheet}")
-    
-    with st.spinner(f"กำลังโหลดข้อมูลจากชีต {target_sheet}..."):
-        sheet_df = load_sheet_data(target_sheet)
-        
-    if sheet_df.empty:
-        st.warning(f"ยังไม่มีข้อมูลในชีต '{target_sheet}' หรือชีตว่างเปล่าครับ")
-    else:
-        # Show some basic stats
-        st.info(f"พบข้อมูลทั้งหมด {len(sheet_df)} รายการ")
         
         # Display the dataframe
         st.dataframe(sheet_df, use_container_width=True)
