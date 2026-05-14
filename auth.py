@@ -228,7 +228,7 @@ def check_login():
                     else:
                         correct_pw = 'admin1234' # Fallback default
                         
-                    if admin_password == correct_pw:
+                    if admin_password.strip() == str(correct_pw).strip():
                         st.session_state['logged_in'] = True
                         st.session_state['role'] = 'admin'
                         st.success("เข้าสู่ระบบแอดมินสำเร็จ!")
