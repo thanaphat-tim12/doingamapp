@@ -34,74 +34,47 @@ def create_pdf_overlay(data):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
     can.setFont('THSarabunNew', 13.0)
-    can.setDash([1, 2]) # Dotted line style
     
     # Coordinates (x, y) from bottom-left corner
     base_h = 841.89
+    y_offset = 10.5 # Adjusted vertical offset for better line alignment
     
-    # Function to draw dotted line
-    def dotted_line(x1, x2, y):
-        can.line(x1, y - 2, x2, y - 2)
-
     # Exact coordinates mapping
-    y1 = base_h - 200.17 - 7.5
+    y1 = base_h - 200.17 - y_offset
     can.drawString(82, y1, str(data.get('p_license_book', '')))
-    dotted_line(82, 140, y1)
-    
     can.drawString(145, y1, str(data.get('p_license_no', '')))
-    dotted_line(145, 190, y1)
-    
     can.drawString(200, y1, str(data.get('p_license_year', '')))
-    dotted_line(200, 250, y1)
     
-    y2 = base_h - 225.66 - 7.5
+    y2 = base_h - 225.66 - y_offset
     can.drawString(275, y2, str(data.get('p_name', '')))
-    dotted_line(275, 500, y2)
-    
     can.drawString(505, y2, str(data.get('p_nationality', '')))
-    dotted_line(505, 560, y2)
     
-    y3 = base_h - 245.16 - 7.5
+    y3 = base_h - 245.16 - y_offset
     can.drawString(115, y3, str(data.get('p_addr', '')))
-    dotted_line(115, 190, y3)
-    
     can.drawString(195, y3, str(data.get('p_moo', '')))
-    dotted_line(195, 250, y3)
     
-    y4 = base_h - 264.66 - 7.5
+    y4 = base_h - 264.66 - y_offset
     can.drawString(155, y4, format_cid(data.get('p_cid', '')))
-    dotted_line(155, 360, y4)
-    
     can.drawString(370, y4, str(data.get('p_phone', '')))
-    dotted_line(370, 560, y4)
     
-    y5 = base_h - 290.16 - 7.5
+    y5 = base_h - 290.16 - y_offset
     can.drawString(220, y5, str(data.get('p_shop', '')))
-    dotted_line(220, 560, y5)
     
-    y6 = base_h - 309.66 - 7.5
+    y6 = base_h - 309.66 - y_offset
     can.drawString(100, y6, str(data.get('p_type', '')))
-    dotted_line(100, 560, y6)
     
-    y7 = base_h - 329.16 - 7.5
+    y7 = base_h - 329.16 - y_offset
     can.drawString(110, y7, str(data.get('p_shop_addr', '')))
-    dotted_line(110, 190, y7)
-    
     can.drawString(195, y7, str(data.get('p_shop_moo', '')))
-    dotted_line(195, 250, y7)
     
-    y8 = base_h - 348.66 - 7.5
+    y8 = base_h - 348.66 - y_offset
     can.drawString(140, y8, str(data.get('p_shop_phone', '')))
-    dotted_line(140, 300, y8)
     
-    y9 = base_h - 374.16 - 7.5
+    y9 = base_h - 374.16 - y_offset
     can.drawString(230, y9, str(data.get('p_fee', '')))
-    dotted_line(230, 310, y9)
-    
     can.drawString(320, y9, str(data.get('p_fee_text', '')))
-    dotted_line(320, 560, y9)
     
-    y10 = base_h - 393.66 - 7.5
+    y10 = base_h - 393.66 - y_offset
     rcpt_book = str(data.get('p_rcpt_book', '')).strip()
     rcpt_no = str(data.get('p_rcpt_no', '')).strip()
     rcpt_combined = rcpt_book
@@ -112,35 +85,26 @@ def create_pdf_overlay(data):
             rcpt_combined = rcpt_no
             
     can.drawString(160, y10, rcpt_combined)
-    dotted_line(160, 350, y10)
-    
     can.drawString(355, y10, str(data.get('p_rcpt_date', '')))
-    dotted_line(355, 560, y10)
     
-    y11 = base_h - 594.66 - 7.5
+    y11 = base_h - 594.66 - y_offset
     can.drawString(300, y11, str(data.get('issue_day', '')))
-    dotted_line(295, 330, y11)
     can.drawString(360, y11, str(data.get('issue_month', '')))
-    dotted_line(340, 430, y11)
     can.drawString(455, y11, str(data.get('issue_year', '')))
-    dotted_line(440, 520, y11)
     
-    y12 = base_h - 620.16 - 7.5
+    y12 = base_h - 620.16 - y_offset
     can.drawString(300, y12, str(data.get('expire_day', '')))
-    dotted_line(295, 330, y12)
     can.drawString(360, y12, str(data.get('expire_month', '')))
-    dotted_line(340, 430, y12)
     can.drawString(455, y12, str(data.get('expire_year', '')))
-    dotted_line(440, 520, y12)
     
-    # Draw 4.3 and 4.4 if provided (optional, assuming they might need to be drawn)
+    # Draw 4.3 and 4.4 if provided
     val_43 = str(data.get('p_43', '')).strip()
     val_44 = str(data.get('p_44', '')).strip()
     
-    can.setFont('THSarabunNew', 13.0)
-    # Estimated coordinates for 4.3 and 4.4 if needed to be drawn
-    # if val_43: can.drawString(100, base_h - 550, f"4.3 {val_43}")
-    # if val_44: can.drawString(100, base_h - 570, f"4.4 {val_44}")
+    if val_43:
+        can.drawString(235, base_h - 542, val_43) # Estimated position next to 4.3.
+    if val_44:
+        can.drawString(235, base_h - 564, val_44) # Estimated position below 4.3.
     
     can.save()
     packet.seek(0)
