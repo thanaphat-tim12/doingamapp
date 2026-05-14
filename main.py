@@ -140,8 +140,8 @@ def create_app_pdf_overlay(data):
     if data.get('chk_6'): can.drawString(112, 261.0 - offset_y, "/")
     if data.get('chk_7'): can.drawString(112, 233.4 - offset_y, "/")
     
-    # Signature at bottom (moved left to prevent overlap)
-    # can.drawString(215, 122.8 - offset_y, str(data.get('p_name', ''))) # Removed per user request to leave blank for manual signing
+   oved per user reques # Signature at bottom (moved left to prevent overlap)
+    # can.drawString(215, 122.8 - offset_y, str(data.get('p_name', ''))) # Remt to leave blank for manual signing
     
     can.save()
     packet.seek(0)
@@ -849,6 +849,11 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         st.cache_data.clear()
                                         st.rerun()
                             
+                            if st.session_state.get(f"m_{index}") in ["print", "edit"]:
+                                if st.button("✖️ ปิดแถบจัดการข้อมูล", key=f"close_{index}", use_container_width=True):
+                                    st.session_state[f"m_{index}"] = None
+                                    st.rerun()
+                                    
                             if st.session_state.get(f"m_{index}") == "print":
                                 tab1, tab2, tab3 = st.tabs(["📄 ใบอนุญาต (อภ.๒)", "📝 คำขอ", "📋 แบบตรวจ"])
                                 
