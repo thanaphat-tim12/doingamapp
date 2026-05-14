@@ -33,36 +33,75 @@ def format_cid(cid):
 def create_pdf_overlay(data):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
-    can.setFont('THSarabunNew', 14.5)
+    can.setFont('THSarabunNew', 13.0)
+    can.setDash([1, 2]) # Dotted line style
     
     # Coordinates (x, y) from bottom-left corner
     base_h = 841.89
     
-    # Exact coordinates mapping based on pdfplumber extraction
-    can.drawString(82, base_h - 200.17 - 7.5, str(data.get('p_license_book', '')))
-    can.drawString(145, base_h - 200.17 - 7.5, str(data.get('p_license_no', '')))
-    can.drawString(200, base_h - 200.17 - 7.5, str(data.get('p_license_year', '')))
+    # Function to draw dotted line
+    def dotted_line(x1, x2, y):
+        can.line(x1, y - 2, x2, y - 2)
+
+    # Exact coordinates mapping
+    y1 = base_h - 200.17 - 7.5
+    can.drawString(82, y1, str(data.get('p_license_book', '')))
+    dotted_line(82, 140, y1)
     
-    can.drawString(275, base_h - 225.66 - 7.5, str(data.get('p_name', '')))
-    can.drawString(505, base_h - 225.66 - 7.5, str(data.get('p_nationality', '')))
+    can.drawString(145, y1, str(data.get('p_license_no', '')))
+    dotted_line(145, 190, y1)
     
-    can.drawString(115, base_h - 245.16 - 7.5, str(data.get('p_addr', '')))
-    can.drawString(195, base_h - 245.16 - 7.5, str(data.get('p_moo', '')))
-    # Note: Tambon, Amphoe, Province are hardcoded in the template, so we skip them here.
+    can.drawString(200, y1, str(data.get('p_license_year', '')))
+    dotted_line(200, 250, y1)
     
-    can.drawString(155, base_h - 264.66 - 7.5, format_cid(data.get('p_cid', '')))
-    can.drawString(370, base_h - 264.66 - 7.5, str(data.get('p_phone', '')))
+    y2 = base_h - 225.66 - 7.5
+    can.drawString(275, y2, str(data.get('p_name', '')))
+    dotted_line(275, 500, y2)
     
-    can.drawString(220, base_h - 290.16 - 7.5, str(data.get('p_shop', '')))
-    can.drawString(100, base_h - 309.66 - 7.5, str(data.get('p_type', '')))
+    can.drawString(505, y2, str(data.get('p_nationality', '')))
+    dotted_line(505, 560, y2)
     
-    can.drawString(110, base_h - 329.16 - 7.5, str(data.get('p_shop_addr', '')))
-    can.drawString(195, base_h - 329.16 - 7.5, str(data.get('p_shop_moo', '')))
-    can.drawString(140, base_h - 348.66 - 7.5, str(data.get('p_shop_phone', '')))
+    y3 = base_h - 245.16 - 7.5
+    can.drawString(115, y3, str(data.get('p_addr', '')))
+    dotted_line(115, 190, y3)
     
-    can.drawString(230, base_h - 374.16 - 7.5, str(data.get('p_fee', '')))
-    can.drawString(320, base_h - 374.16 - 7.5, str(data.get('p_fee_text', '')))
+    can.drawString(195, y3, str(data.get('p_moo', '')))
+    dotted_line(195, 250, y3)
     
+    y4 = base_h - 264.66 - 7.5
+    can.drawString(155, y4, format_cid(data.get('p_cid', '')))
+    dotted_line(155, 360, y4)
+    
+    can.drawString(370, y4, str(data.get('p_phone', '')))
+    dotted_line(370, 560, y4)
+    
+    y5 = base_h - 290.16 - 7.5
+    can.drawString(220, y5, str(data.get('p_shop', '')))
+    dotted_line(220, 560, y5)
+    
+    y6 = base_h - 309.66 - 7.5
+    can.drawString(100, y6, str(data.get('p_type', '')))
+    dotted_line(100, 560, y6)
+    
+    y7 = base_h - 329.16 - 7.5
+    can.drawString(110, y7, str(data.get('p_shop_addr', '')))
+    dotted_line(110, 190, y7)
+    
+    can.drawString(195, y7, str(data.get('p_shop_moo', '')))
+    dotted_line(195, 250, y7)
+    
+    y8 = base_h - 348.66 - 7.5
+    can.drawString(140, y8, str(data.get('p_shop_phone', '')))
+    dotted_line(140, 300, y8)
+    
+    y9 = base_h - 374.16 - 7.5
+    can.drawString(230, y9, str(data.get('p_fee', '')))
+    dotted_line(230, 310, y9)
+    
+    can.drawString(320, y9, str(data.get('p_fee_text', '')))
+    dotted_line(320, 560, y9)
+    
+    y10 = base_h - 393.66 - 7.5
     rcpt_book = str(data.get('p_rcpt_book', '')).strip()
     rcpt_no = str(data.get('p_rcpt_no', '')).strip()
     rcpt_combined = rcpt_book
@@ -72,16 +111,27 @@ def create_pdf_overlay(data):
         else:
             rcpt_combined = rcpt_no
             
-    can.drawString(160, base_h - 393.66 - 7.5, rcpt_combined)
-    can.drawString(355, base_h - 393.66 - 7.5, str(data.get('p_rcpt_date', '')))
+    can.drawString(160, y10, rcpt_combined)
+    dotted_line(160, 350, y10)
     
-    can.drawString(300, base_h - 594.66 - 7.5, str(data.get('issue_day', '')))
-    can.drawString(360, base_h - 594.66 - 7.5, str(data.get('issue_month', '')))
-    can.drawString(455, base_h - 594.66 - 7.5, str(data.get('issue_year', '')))
+    can.drawString(355, y10, str(data.get('p_rcpt_date', '')))
+    dotted_line(355, 560, y10)
     
-    can.drawString(300, base_h - 620.16 - 7.5, str(data.get('expire_day', '')))
-    can.drawString(360, base_h - 620.16 - 7.5, str(data.get('expire_month', '')))
-    can.drawString(455, base_h - 620.16 - 7.5, str(data.get('expire_year', '')))
+    y11 = base_h - 594.66 - 7.5
+    can.drawString(300, y11, str(data.get('issue_day', '')))
+    dotted_line(295, 330, y11)
+    can.drawString(360, y11, str(data.get('issue_month', '')))
+    dotted_line(340, 430, y11)
+    can.drawString(455, y11, str(data.get('issue_year', '')))
+    dotted_line(440, 520, y11)
+    
+    y12 = base_h - 620.16 - 7.5
+    can.drawString(300, y12, str(data.get('expire_day', '')))
+    dotted_line(295, 330, y12)
+    can.drawString(360, y12, str(data.get('expire_month', '')))
+    dotted_line(340, 430, y12)
+    can.drawString(455, y12, str(data.get('expire_year', '')))
+    dotted_line(440, 520, y12)
     
     can.save()
     packet.seek(0)
@@ -102,7 +152,7 @@ def create_pdf_overlay(data):
 def create_app_pdf_overlay(data):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
-    can.setFont('THSarabunNew', 14.5)
+    can.setFont('THSarabunNew', 13.0)
     
     # Use EXACT coordinates from the original document's words, minus a small offset to sit on the dotted line
     offset_y = -3.0
@@ -1218,25 +1268,3 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                                 st.error("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง")
         else: st.warning("❌ ไม่พบข้อมูล")
 
-        
-        # Display the dataframe
-        st.dataframe(sheet_df, use_container_width=True)
-        
-        # Add download button
-        import io
-        buffer = io.BytesIO()
-        try:
-            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                # Excel sheet names max 31 chars
-                safe_sheet_name = target_sheet[:31]
-                sheet_df.to_excel(writer, index=False, sheet_name=safe_sheet_name)
-            
-            st.download_button(
-                label="📥 ดาวน์โหลดรายชื่อนี้เป็นไฟล์ Excel",
-                data=buffer.getvalue(),
-                file_name=f"รายชื่อ_{target_sheet}_{datetime.now().strftime('%d%m%Y')}.xlsx",
-                mime="application/vnd.ms-excel",
-                type="primary"
-            )
-        except Exception as e:
-            pass
