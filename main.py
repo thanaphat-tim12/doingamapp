@@ -133,11 +133,33 @@ def create_pdf_overlay(data):
     can.drawString(455, y12, str(data.get('expire_year', '')))
     dotted_line(440, 520, y12)
     
+    # Draw 4.3 and 4.4 if provided (optional, assuming they might need to be drawn)
+    val_43 = str(data.get('p_43', '')).strip()
+    val_44 = str(data.get('p_44', '')).strip()
+    
+    can.setFont('THSarabunNew', 13.0)
+    # Estimated coordinates for 4.3 and 4.4 if needed to be drawn
+    # if val_43: can.drawString(100, base_h - 550, f"4.3 {val_43}")
+    # if val_44: can.drawString(100, base_h - 570, f"4.4 {val_44}")
+    
     can.save()
     packet.seek(0)
     
     new_pdf = PdfReader(packet)
-    existing_pdf = PdfReader(open("template.pdf", "rb"))
+    
+    # Choose template based on user requirements
+    template_file = "template.pdf"
+    if val_43 and not val_44:
+        template_file = "template4.3.pdf"
+    elif val_43 and val_44:
+        template_file = "template 4.2.pdf"
+        
+    try:
+        existing_pdf = PdfReader(open(template_file, "rb"))
+    except Exception as e:
+        # Fallback to main template if specific one is missing
+        existing_pdf = PdfReader(open("template.pdf", "rb"))
+        
     output = PdfWriter()
     
     page = existing_pdf.pages[0]
@@ -1004,6 +1026,13 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_rcpt_no = c_r4.text_input("ใบเสร็จเลขที่", value=str(row.get(cols['rcpt_no'], '')), key=f"p_no_{index}")
                                         
                                         c_d1, c_d2, c_d3 = st.columns(3)
+                                        # (New condition fields 4.3 and 4.4 added below)
+                                        st.markdown("---")
+                                        st.markdown("**เงื่อนไขเพิ่มเติม (ข้อ 4)**")
+                                        c_41, c_42 = st.columns(2)
+                                        p_43 = c_41.text_input("เงื่อนไขเพิ่มเติม 4.3", value="", key=f"p_43_{index}", placeholder="กรอกเพื่อใช้ template 4.3")
+                                        p_44 = c_42.text_input("เงื่อนไขเพิ่มเติม 4.4", value="", key=f"p_44_{index}", placeholder="กรอกร่วมกับ 4.3 เพื่อใช้ template 4.2")
+                                        st.markdown("---")
                                         p_rcpt_date = c_d1.date_input("ลงวันที่ (ใบเสร็จ)", value=issue_default, key=f"p_rcpt_date_{index}")
                                         p_issue = c_d2.date_input("วันที่ออกใบอนุญาต", value=issue_default, key=f"p_issue_{index}")
                                         p_expire = c_d3.date_input("วันหมดอายุ", value=expire_default, key=f"p_expire_{index}")
@@ -1060,6 +1089,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             "expire_day": str(p_expire.day),
                                             "expire_month": thai_months[p_expire.month],
                                             "expire_year": str(p_expire.year + 543),
+                                            "p_43": p_43,
+                                            "p_44": p_44,
                                         }
                                         try:
                                             pdf_buffer = create_pdf_overlay(context)
