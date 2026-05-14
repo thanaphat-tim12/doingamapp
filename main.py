@@ -37,44 +37,44 @@ def create_pdf_overlay(data):
     
     # Coordinates (x, y) from bottom-left corner
     base_h = 841.89
-    y_offset = 16.0 # Raised slightly (reduced from 19.5)
+    y_offset = 18.0 # Balanced offset (between 16 and 19.5)
     
-    # Exact coordinates mapping (Adjusted X to be more to the right)
+    # Exact coordinates mapping (Fine-tuned X and Y)
     y1 = base_h - 200.17 - y_offset
-    can.drawString(100, y1, str(data.get('p_license_book', '')))
-    can.drawString(165, y1, str(data.get('p_license_no', '')))
-    can.drawString(220, y1, str(data.get('p_license_year', '')))
+    can.drawString(90, y1, str(data.get('p_license_book', '')))
+    can.drawString(155, y1, str(data.get('p_license_no', '')))
+    can.drawString(210, y1, str(data.get('p_license_year', '')))
     
     y2 = base_h - 225.66 - y_offset
-    can.drawString(295, y2, str(data.get('p_name', '')))
-    can.drawString(515, y2, str(data.get('p_nationality', '')))
+    can.drawString(285, y2, str(data.get('p_name', '')))
+    can.drawString(510, y2, str(data.get('p_nationality', '')))
     
     y3 = base_h - 245.16 - y_offset
-    can.drawString(135, y3, str(data.get('p_addr', '')))
-    can.drawString(215, y3, str(data.get('p_moo', '')))
+    can.drawString(125, y3, str(data.get('p_addr', '')))
+    can.drawString(205, y3, str(data.get('p_moo', '')))
     
     y4 = base_h - 264.66 - y_offset
-    can.drawString(175, y4, format_cid(data.get('p_cid', '')))
-    can.drawString(390, y4, str(data.get('p_phone', '')))
+    can.drawString(165, y4, format_cid(data.get('p_cid', '')))
+    can.drawString(380, y4, str(data.get('p_phone', '')))
     
     y5 = base_h - 290.16 - y_offset
-    can.drawString(240, y5, str(data.get('p_shop', '')))
+    can.drawString(230, y5, str(data.get('p_shop', '')))
     
     y6 = base_h - 309.66 - y_offset
-    can.drawString(120, y6, str(data.get('p_type', '')))
+    can.drawString(110, y6, str(data.get('p_type', '')))
     
     y7 = base_h - 329.16 - y_offset
-    can.drawString(130, y7, str(data.get('p_shop_addr', '')))
-    can.drawString(215, y7, str(data.get('p_shop_moo', '')))
+    can.drawString(120, y7, str(data.get('p_shop_addr', '')))
+    can.drawString(205, y7, str(data.get('p_shop_moo', '')))
     
     y8 = base_h - 348.66 - y_offset
-    can.drawString(160, y8, str(data.get('p_shop_phone', '')))
+    can.drawString(150, y8, str(data.get('p_shop_phone', '')))
     
     y9 = base_h - 374.16 - y_offset
-    can.drawString(250, y9, str(data.get('p_fee', '')))
-    can.drawString(340, y9, str(data.get('p_fee_text', '')))
+    can.drawString(240, y9, str(data.get('p_fee', '')))
+    can.drawString(330, y9, str(data.get('p_fee_text', '')))
     
-    y10 = base_h - 393.66 - y_offset
+    y10 = base_h - 388.0 - y_offset # Raised to avoid overlapping line (2)
     rcpt_book = str(data.get('p_rcpt_book', '')).strip()
     rcpt_no = str(data.get('p_rcpt_no', '')).strip()
     rcpt_combined = rcpt_book
@@ -84,27 +84,27 @@ def create_pdf_overlay(data):
         else:
             rcpt_combined = rcpt_no
             
-    can.drawString(180, y10, rcpt_combined)
-    can.drawString(375, y10, str(data.get('p_rcpt_date', '')))
+    can.drawString(170, y10, rcpt_combined)
+    can.drawString(365, y10, str(data.get('p_rcpt_date', '')))
     
     y11 = base_h - 594.66 - y_offset
-    can.drawString(320, y11, str(data.get('issue_day', '')))
-    can.drawString(380, y11, str(data.get('issue_month', '')))
-    can.drawString(475, y11, str(data.get('issue_year', '')))
+    can.drawString(300, y11, str(data.get('issue_day', '')))
+    can.drawString(360, y11, str(data.get('issue_month', '')))
+    can.drawString(455, y11, str(data.get('issue_year', '')))
     
     y12 = base_h - 620.16 - y_offset
-    can.drawString(320, y12, str(data.get('expire_day', '')))
-    can.drawString(380, y12, str(data.get('expire_month', '')))
-    can.drawString(475, y12, str(data.get('expire_year', '')))
+    can.drawString(300, y12, str(data.get('expire_day', '')))
+    can.drawString(360, y12, str(data.get('expire_month', '')))
+    can.drawString(455, y12, str(data.get('expire_year', '')))
     
     # Draw 4.3 and 4.4 if provided
     val_43 = str(data.get('p_43', '')).strip()
     val_44 = str(data.get('p_44', '')).strip()
     
     if val_43:
-        can.drawString(230, base_h - 578, val_43) # Shifted right (X=230)
+        can.drawString(225, base_h - 578, val_43) # Slightly adjusted X
     if val_44:
-        can.drawString(230, base_h - 600, val_44) # Shifted right (X=230)
+        can.drawString(225, base_h - 600, val_44) # Slightly adjusted X
     
     can.save()
     packet.seek(0)
