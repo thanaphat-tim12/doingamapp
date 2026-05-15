@@ -60,17 +60,27 @@ def create_pdf_overlay(data):
     y1, y2, y3, y4 = 638, 612, 592, 573
     y5, y6, y7, y8 = 549, 529, 512, 492
     y9, y10, y11, y12 = 468, 450, 255, 234
+    
+    # ค่าธรรมเนียม X (Default)
+    fee_x = 240
+    fee_text_x = 330
 
     if val_43 and not val_44:
         template_file = "template4.3.pdf"
         y1, y2, y3, y4 = 638, 612, 592, 573
         y5, y6, y7, y8 = 549, 529, 512, 492
         y9, y10, y11, y12 = 468, 450, 239, 212
+        # คุณสามารถปรับแกน X เฉพาะของ 4.3 ได้ที่นี่ครับ:
+        # name_x = 275  # ปรับตัวเลขนี้เพื่อขยับชื่อ
+        # shop_x = 230  # ปรับตัวเลขนี้เพื่อขยับชื่อร้าน
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
         y1, y2, y3, y4 = 638, 612, 592, 573
         y5, y6, y7, y8 = 549, 529, 512, 492
         y9, y10, y11, y12 = 468, 450, 220, 195
+        # คุณสามารถปรับแกน X เฉพาะของ 4.2 ได้ที่นี่ครับ:
+        # name_x = 275 
+        # shop_x = 230
     else:
         template_file = "template.pdf"
 
@@ -113,8 +123,8 @@ def create_pdf_overlay(data):
     can.drawString(150, y8, str(data.get('p_shop_phone', '')))
     
     # วาดบรรทัดที่ 9: ค่าธรรมเนียม
-    can.drawString(240, y9, str(data.get('p_fee', '')))
-    can.drawString(330, y9, str(data.get('p_fee_text', '')))
+    can.drawString(fee_x, y9, str(data.get('p_fee', '')))
+    can.drawString(fee_text_x, y9, str(data.get('p_fee_text', '')))
     
     # วาดบรรทัดที่ 10: ใบเสร็จรับเงิน
     rcpt_book = str(data.get('p_rcpt_book', '')).strip()
@@ -581,7 +591,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.24 (Font 10.0 & Final Tweaks)")
+        st.caption("Version: V.25 (Independent X-axis Overrides)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
