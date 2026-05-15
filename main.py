@@ -76,7 +76,7 @@ def create_pdf_overlay(data):
     y4 = 571
     y5 = 549 # ค่านี้ตรงแล้ว
     y6 = 529 # ค่านี้ตรงแล้ว
-    y7 = 506
+    y7 = 512 # ขยับขึ้นตามคำขอ (เดิม 506)
     y8 = 486
     y9 = 461
     y10 = 441
@@ -92,9 +92,12 @@ def create_pdf_overlay(data):
     can.drawString(name_x, y2, str(data.get('p_name', '')))
     can.drawString(500, y2, str(data.get('p_nationality', ''))) # ขยับมาทางซ้ายนิดหน่อย
     
-    # วาดบรรทัดที่ 3: ที่อยู่
+    # วาดบรรทัดที่ 3: ที่อยู่เจ้าของ
     can.drawString(125, y3, str(data.get('p_addr', '')))
     can.drawString(205, y3, str(data.get('p_moo', '')))
+    can.drawString(280, y3, str(data.get('p_tumbon', '')))
+    can.drawString(410, y3, str(data.get('p_amphoe', '')))
+    can.drawString(520, y3, str(data.get('p_province', '')))
     
     # วาดบรรทัดที่ 4: CID / โทรศัพท์
     can.drawString(cid_x, y4, format_cid(data.get('p_cid', '')))
@@ -109,6 +112,9 @@ def create_pdf_overlay(data):
     # วาดบรรทัดที่ 7: ที่อยู่สถานประกอบการ
     can.drawString(120, y7, str(data.get('p_shop_addr', '')))
     can.drawString(205, y7, str(data.get('p_shop_moo', '')))
+    can.drawString(280, y7, str(data.get('p_shop_tumbon', '')))
+    can.drawString(410, y7, str(data.get('p_shop_amphoe', '')))
+    can.drawString(520, y7, str(data.get('p_shop_province', '')))
     
     # วาดบรรทัดที่ 8: โทรศัพท์สถานประกอบการ
     can.drawString(150, y8, str(data.get('p_shop_phone', '')))
@@ -582,7 +588,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.10 (Font 11.0 & Fine-tune)")
+        st.caption("Version: V.11 (More Address Fields & y7 Fix)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
@@ -1004,11 +1010,30 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_cid = col_f1.text_input("เลขประจำตัวประชาชน/นิติบุคคล", value=row.get(cols['cid'], ''), key=f"p_cid_{index}")
                                         p_phone = col_f2.text_input("โทรศัพท์", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"p_phone_{index}")
                                         
-                                        p_shop = col_f1.text_input("ชื่อสถานประกอบการ", value=row.get(cols['shop'], ''), key=f"p_shop_{index}")
-                                        p_type = col_f2.text_input("ประเภทการทำกิจการ", value=row.get(cols['type'], ''), key=f"p_type_{index}")
-                                        
                                         p_addr = col_f1.text_input("ที่อยู่/บ้านเลขที่", value=row.get(cols['address'], ''), key=f"p_addr_{index}")
                                         p_moo = col_f2.text_input("หมู่ที่", value=row.get(cols['moo'], ''), key=f"p_moo_{index}")
+                                        
+                                        c_addr_o1, c_addr_o2, c_addr_o3 = st.columns(3)
+                                        p_tumbon = c_addr_o1.text_input("ตำบล", value="", key=f"p_t_{index}")
+                                        p_amphoe = c_addr_o2.text_input("อำเภอ", value="", key=f"p_a_{index}")
+                                        p_province = c_addr_o3.text_input("จังหวัด", value="", key=f"p_p_{index}")
+                                        
+                                        st.markdown("---")
+                                        st.markdown("**ข้อมูลสถานประกอบการ**")
+                                        
+                                        col_s1, col_s2 = st.columns(2)
+                                        p_shop = col_s1.text_input("ชื่อสถานประกอบการ", value=row.get(cols['shop'], ''), key=f"p_shop_{index}")
+                                        p_type = col_s2.text_input("ประเภทการทำกิจการ", value=row.get(cols['type'], ''), key=f"p_type_{index}")
+                                        
+                                        p_shop_addr = col_s1.text_input("ที่อยู่สถานประกอบการ", value=row.get(cols['address'], ''), key=f"p_s_addr_{index}")
+                                        p_shop_moo = col_s2.text_input("หมู่ที่ (สถานประกอบการ)", value=row.get(cols['moo'], ''), key=f"p_s_moo_{index}")
+                                        
+                                        c_addr_s1, c_addr_s2, c_addr_s3 = st.columns(3)
+                                        p_shop_tumbon = c_addr_s1.text_input("ตำบล (ร้าน)", value="", key=f"p_s_t_{index}")
+                                        p_shop_amphoe = c_addr_s2.text_input("อำเภอ (ร้าน)", value="", key=f"p_s_a_{index}")
+                                        p_shop_province = c_addr_s3.text_input("จังหวัด (ร้าน)", value="", key=f"p_s_p_{index}")
+                                        
+                                        p_phone = col_s2.text_input("โทรศัพท์ (ร้าน)", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"p_s_phone_{index}")
                                         
                                         st.markdown("---")
                                         st.markdown("**ข้อมูลใบอนุญาต และใบเสร็จรับเงิน**")
@@ -1070,12 +1095,18 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             "p_nationality": p_nationality,
                                             "p_addr": p_addr,
                                             "p_moo": p_moo,
+                                            "p_tumbon": p_tumbon,
+                                            "p_amphoe": p_amphoe,
+                                            "p_province": p_province,
                                             "p_cid": p_cid,
                                             "p_phone": p_phone,
                                             "p_shop": p_shop,
                                             "p_type": p_type,
-                                            "p_shop_addr": p_addr,
-                                            "p_shop_moo": p_moo,
+                                            "p_shop_addr": p_shop_addr,
+                                            "p_shop_moo": p_shop_moo,
+                                            "p_shop_tumbon": p_shop_tumbon,
+                                            "p_shop_amphoe": p_shop_amphoe,
+                                            "p_shop_province": p_shop_province,
                                             "p_shop_phone": p_phone,
                                             "p_fee": p_fee,
                                             "p_fee_text": p_fee_text,
