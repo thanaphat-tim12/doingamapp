@@ -60,8 +60,6 @@ def create_pdf_overlay(data):
     # 2. ปรับเปลี่ยนพิกัดตามแต่ละ Template (เฉพาะจุดที่แตกต่างกันจริงๆ)
     if val_43 and not val_44:
         template_file = "template4.3.pdf"
-        # หาก template 4.3 มีระยะบรรทัดต่างจากปกติ ให้แก้ตรงนี้
-        # y_offset = 24.0 
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
     else:
@@ -96,8 +94,8 @@ def create_pdf_overlay(data):
     can.drawString(125, y3, str(data.get('p_addr', '')))
     can.drawString(205, y3, str(data.get('p_moo', '')))
     can.drawString(280, y3, str(data.get('p_tumbon', '')))
-    can.drawString(410, y3, str(data.get('p_amphoe', '')))
-    can.drawString(520, y3, str(data.get('p_province', '')))
+    can.drawString(420, y3, str(data.get('p_amphoe', ''))) # ขยับไป 420
+    can.drawString(535, y3, str(data.get('p_province', ''))) # ขยับไป 535
     
     # วาดบรรทัดที่ 4: CID / โทรศัพท์
     can.drawString(cid_x, y4, format_cid(data.get('p_cid', '')))
@@ -112,6 +110,9 @@ def create_pdf_overlay(data):
     # วาดบรรทัดที่ 7: ที่อยู่สถานประกอบการ
     can.drawString(120, y7, str(data.get('p_shop_addr', '')))
     can.drawString(205, y7, str(data.get('p_shop_moo', '')))
+    can.drawString(280, y7, str(data.get('p_shop_tumbon', '')))
+    can.drawString(420, y7, str(data.get('p_shop_amphoe', ''))) # ขยับไป 420
+    can.drawString(535, y7, str(data.get('p_shop_province', ''))) # ขยับไป 535
     
     # วาดบรรทัดที่ 8: โทรศัพท์สถานประกอบการ
     can.drawString(150, y8, str(data.get('p_shop_phone', '')))
@@ -585,7 +586,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.15 (Fine-tune y4, y8, y9, y12)")
+        st.caption("Version: V.16 (Re-add Shop Addr & Center X)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
@@ -1025,6 +1026,11 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_shop_addr = col_s1.text_input("ที่อยู่สถานประกอบการ", value=row.get(cols['address'], ''), key=f"p_s_addr_{index}")
                                         p_shop_moo = col_s2.text_input("หมู่ที่ (สถานประกอบการ)", value=row.get(cols['moo'], ''), key=f"p_s_moo_{index}")
                                         
+                                        c_addr_s1, c_addr_s2, c_addr_s3 = st.columns(3)
+                                        p_shop_tumbon = c_addr_s1.text_input("ตำบล (ร้าน)", value="", key=f"p_s_t_{index}")
+                                        p_shop_amphoe = c_addr_s2.text_input("อำเภอ (ร้าน)", value="", key=f"p_s_a_{index}")
+                                        p_shop_province = c_addr_s3.text_input("จังหวัด (ร้าน)", value="", key=f"p_s_p_{index}")
+                                        
                                         p_phone = col_s2.text_input("โทรศัพท์ (ร้าน)", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"p_s_phone_{index}")
                                         
                                         st.markdown("---")
@@ -1096,6 +1102,9 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             "p_type": p_type,
                                             "p_shop_addr": p_shop_addr,
                                             "p_shop_moo": p_shop_moo,
+                                            "p_shop_tumbon": p_shop_tumbon,
+                                            "p_shop_amphoe": p_shop_amphoe,
+                                            "p_shop_province": p_shop_province,
                                             "p_shop_phone": p_phone,
                                             "p_fee": p_fee,
                                             "p_fee_text": p_fee_text,
