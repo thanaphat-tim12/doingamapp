@@ -73,15 +73,15 @@ def create_pdf_overlay(data):
     y1 = 638
     y2 = 612
     y3 = 591
-    y4 = 571
+    y4 = 572
     y5 = 549 # ค่านี้ตรงแล้ว
     y6 = 529 # ค่านี้ตรงแล้ว
     y7 = 512 # ขยับขึ้นตามคำขอ (เดิม 506)
-    y8 = 486
-    y9 = 465
+    y8 = 490
+    y9 = 467
     y10 = 450 # ปรับตามที่ผู้ใช้พิมพ์มา
     y11 = 255 # ปรับตามที่ผู้ใช้พิมพ์มา
-    y12 = 235 # ปรับตามที่ผู้ใช้พิมพ์มา
+    y12 = 234 # ปรับตามที่ผู้ใช้พิมพ์มา
 
     # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
     can.drawString(90, y1, str(data.get('p_license_book', '')))
@@ -585,7 +585,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.14 (Fine-tune y2 & y9)")
+        st.caption("Version: V.15 (Fine-tune y4, y8, y9, y12)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
