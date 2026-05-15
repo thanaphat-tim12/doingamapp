@@ -44,8 +44,8 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
-    # ปรับพิกัดตาม "ไม้บรรทัดดิจิทัล" ที่คำนวณแล้ว
-    y_offset = 1.0
+    # ปรับพิกัดตาม "ไม้บรรทัดดิจิทัล" V.3 (ล็อคพิกัดล่าสุด)
+    y_offset = 9.0
     name_x = 275
     cid_x = 165
     shop_x = 230
@@ -581,6 +581,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
+        st.caption("Version: V.3 (Final Grid Lock)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
