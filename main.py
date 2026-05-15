@@ -593,7 +593,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.29 (THSarabun & Font 10.0)")
+        st.caption("Version: V.30 (Fix Duplicate Button ID)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
@@ -1256,6 +1256,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                                     data=f,
                                                     file_name="แบบตรวจกิจการ_อบต_ดอยงาม.pdf",
                                                     mime="application/pdf",
+                                                    key=f"inspection_btn_{index}",
                                                     type="primary"
                                                 )
                                         else:
