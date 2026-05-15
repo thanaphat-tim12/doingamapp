@@ -44,8 +44,8 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
-    # ปรับพิกัดตาม "ไม้บรรทัดดิจิทัล" V.3 (ล็อคพิกัดล่าสุด)
-    y_offset = 9.0
+    # ปรับพิกัดตาม "ไม้บรรทัดดิจิทัล" V.4 (ล็อคพิกัดล่าสุด)
+    y_offset = 13.5
     name_x = 275
     cid_x = 165
     shop_x = 230
@@ -581,7 +581,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.3 (Final Grid Lock)")
+        st.caption("Version: V.4 (Fix Date Error & Pos)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
@@ -973,20 +973,26 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                     
                                     # แปลงเป็น datetime object เพื่อใช้กับ date_input
                                     try:
-                                        if isinstance(old_issue, (pd.Timestamp, datetime)):
+                                        if pd.notna(old_issue) and isinstance(old_issue, (pd.Timestamp, datetime)):
                                             issue_default = old_issue.date()
                                         else:
+                                            # ลองแปลงจาก String ถ้าไม่ใช่ Timestamp
                                             issue_default = datetime.strptime(str(old_issue).split(' ')[0], '%d/%m/%Y').date()
                                     except:
                                         issue_default = datetime.now().date()
                                         
                                     try:
-                                        if isinstance(old_exp, (pd.Timestamp, datetime)):
+                                        if pd.notna(old_exp) and isinstance(old_exp, (pd.Timestamp, datetime)):
                                             expire_default = old_exp.date()
                                         else:
+                                            # ลองแปลงจาก String ถ้าไม่ใช่ Timestamp
                                             expire_default = datetime.strptime(str(old_exp).split(' ')[0], '%d/%m/%Y').date()
                                     except:
-                                        expire_default = (issue_default + timedelta(days=365)).replace(day=issue_default.day) - timedelta(days=1)
+                                        # ถ้าคำนวณไม่ได้ ให้เป็น +1 ปี จากวันออก
+                                        expire_default = (issue_default + timedelta(days=365))
+                                        try:
+                                            expire_default = expire_default.replace(day=issue_default.day) - timedelta(days=1)
+                                        except: pass
                                     
                                     with st.container(border=True):
                                         col_f1, col_f2 = st.columns(2)
