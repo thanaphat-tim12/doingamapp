@@ -48,15 +48,23 @@ def create_pdf_overlay(data):
     shop_x = 230
     receipt_y_diff = 388.0 # ระยะจากด้านบนถึงบรรทัดใบเสร็จ
     date_x = 300 # พิกัด X เริ่มต้นสำหรับ วัน/เดือน/ปี ของบรรทัดออกใบอนุญาต/หมดอายุ
+    special_x = 230 # พิกัด X สำหรับเงื่อนไขพิเศษ 4.3/4.4
+    special_y_43 = base_h - 578 # พิกัด Y สำหรับ 4.3
+    special_y_44 = base_h - 600 # พิกัด Y สำหรับ 4.4
     
     template_file = "template.pdf"
     
     # 2. ปรับเปลี่ยนพิกัดตามแต่ละ Template (แยกตั้งค่าที่นี่ได้เลย)
     if val_43 and not val_44:
         template_file = "template4.3.pdf"
-        # ตัวอย่างการปรับแยก: 
-        # y_offset = 20.0 
-        # name_x = 290
+        # พิกัดสำหรับ template4.3.pdf
+        y_offset = 18.7
+        name_x = 275
+        cid_x = 155
+        shop_x = 220
+        receipt_y_diff = 380.0
+        date_x = 285
+        special_x = 230 
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
         # ตัวอย่างการปรับแยก:
@@ -129,9 +137,9 @@ def create_pdf_overlay(data):
     can.drawString(date_x + 155, y12, str(data.get('expire_year', '')))
     
     if val_43:
-        can.drawString(225, base_h - 578, val_43)
+        can.drawString(special_x, special_y_43, val_43)
     if val_44:
-        can.drawString(225, base_h - 600, val_44)
+        can.drawString(special_x, special_y_44, val_44)
     
     can.save()
     packet.seek(0)
