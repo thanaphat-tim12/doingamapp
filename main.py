@@ -44,8 +44,8 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
-    # ปรับพิกัด V.5 (ถอดตัวแปรซ้ำซ้อนออกแล้ว)
-    y_offset = 24.0
+    # ปรับพิกัด V.6 (ดีดขึ้น 1 บรรทัดจาก V.5)
+    y_offset = 5.5
     name_x = 275
     cid_x = 165
     shop_x = 230
@@ -568,7 +568,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.5 (Clean Overrides & Pos)")
+        st.caption("Version: V.6 (Shift Up 1 Line)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
