@@ -36,7 +36,7 @@ def format_cid(cid):
 def create_pdf_overlay(data):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
-    can.setFont('THSarabun', 10.0) # เปลี่ยนเป็น THSarabun และลดขนาดเหลือ 10.0
+    can.setFont('THSarabunNew', 10.0)
     
     base_h = 841.89
     
@@ -153,7 +153,7 @@ def create_pdf_overlay(data):
     
     def draw_safe_string(x, y, text, max_w):
         # คำนวณความยาวจริง (นับเฉพาะตัวที่กินพื้นที่)
-        while text and pdfmetrics.stringWidth(text, 'THSarabun', 11.0) > max_w:
+        while text and pdfmetrics.stringWidth(text, 'THSarabunNew', 11.0) > max_w:
             text = text[:-1]
         can.drawString(x, y, text)
 
@@ -599,7 +599,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.33 (Visual Text Truncation)")
+        st.caption("Version: V.34 (License: THSarabunNew)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
