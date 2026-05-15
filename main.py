@@ -151,10 +151,16 @@ def create_pdf_overlay(data):
     can.drawString(date_x + 60, y12, str(data.get('expire_month', '')))
     can.drawString(date_x + 155, y12, str(data.get('expire_year', '')))
     
+    def draw_safe_string(x, y, text, max_w):
+        # คำนวณความยาวจริง (นับเฉพาะตัวที่กินพื้นที่)
+        while text and pdfmetrics.stringWidth(text, 'THSarabun', 11.0) > max_w:
+            text = text[:-1]
+        can.drawString(x, y, text)
+
     if val_43:
-        can.drawString(special_x, special_y_43, val_43)
+        draw_safe_string(special_x, special_y_43, val_43, 595 - special_x - 30)
     if val_44:
-        can.drawString(special_x, special_y_44, val_44)
+        draw_safe_string(special_x, special_y_44, val_44, 595 - special_x - 30)
     
     can.save()
     packet.seek(0)
@@ -593,7 +599,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.32 (Max 85 chars for 4.3/4.4)")
+        st.caption("Version: V.33 (Visual Text Truncation)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
@@ -1059,8 +1065,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         st.markdown("---")
                                         st.markdown("**เงื่อนไขเพิ่มเติม (ข้อ 4)**")
                                         c_41, c_42 = st.columns(2)
-                                        p_43 = c_41.text_input("เงื่อนไขเพิ่มเติม 4.3", value="", key=f"p_43_{index}", placeholder="กรอกได้ไม่เกิน 85 ตัวอักษร", max_chars=85)
-                                        p_44 = c_42.text_input("เงื่อนไขเพิ่มเติม 4.4", value="", key=f"p_44_{index}", placeholder="กรอกได้ไม่เกิน 85 ตัวอักษร", max_chars=85)
+                                        p_43 = c_41.text_input("เงื่อนไขเพิ่มเติม 4.3", value="", key=f"p_43_{index}", placeholder="กรอกได้ประมาณ 85 ตัวอักษร (ไม่นับสระ)", max_chars=120)
+                                        p_44 = c_42.text_input("เงื่อนไขเพิ่มเติม 4.4", value="", key=f"p_44_{index}", placeholder="กรอกได้ประมาณ 85 ตัวอักษร (ไม่นับสระ)", max_chars=120)
                                         st.markdown("---")
                                         p_rcpt_date = c_d1.date_input("ลงวันที่ (ใบเสร็จ)", value=issue_default, key=f"p_rcpt_date_{index}")
                                         p_issue = c_d2.date_input("วันที่ออกใบอนุญาต", value=issue_default, key=f"p_issue_{index}")
