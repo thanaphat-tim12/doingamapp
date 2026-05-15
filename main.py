@@ -65,12 +65,12 @@ def create_pdf_overlay(data):
         template_file = "template4.3.pdf"
         y1, y2, y3, y4 = 638, 612, 592, 572
         y5, y6, y7, y8 = 549, 529, 512, 492
-        y9, y10, y11, y12 = 468, 450, 240, 225
+        y9, y10, y11, y12 = 468, 450, 240, 210
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
         y1, y2, y3, y4 = 638, 612, 592, 572
         y5, y6, y7, y8 = 549, 529, 512, 492
-        y9, y10, y11, y12 = 468, 450, 210, 199
+        y9, y10, y11, y12 = 468, 450, 230, 195
     else:
         template_file = "template.pdf"
 
@@ -581,7 +581,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.21 (Re-push & Sync)")
+        st.caption("Version: V.22 (Refined Template Y-coords)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
