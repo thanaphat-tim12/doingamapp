@@ -593,7 +593,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.31 (App Form Y+3 Tweak)")
+        st.caption("Version: V.32 (Max 85 chars for 4.3/4.4)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
@@ -1059,8 +1059,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         st.markdown("---")
                                         st.markdown("**เงื่อนไขเพิ่มเติม (ข้อ 4)**")
                                         c_41, c_42 = st.columns(2)
-                                        p_43 = c_41.text_input("เงื่อนไขเพิ่มเติม 4.3", value="", key=f"p_43_{index}", placeholder="กรอกเพื่อใช้ template 4.3")
-                                        p_44 = c_42.text_input("เงื่อนไขเพิ่มเติม 4.4", value="", key=f"p_44_{index}", placeholder="กรอกร่วมกับ 4.3 เพื่อใช้ template 4.2")
+                                        p_43 = c_41.text_input("เงื่อนไขเพิ่มเติม 4.3", value="", key=f"p_43_{index}", placeholder="กรอกได้ไม่เกิน 85 ตัวอักษร", max_chars=85)
+                                        p_44 = c_42.text_input("เงื่อนไขเพิ่มเติม 4.4", value="", key=f"p_44_{index}", placeholder="กรอกได้ไม่เกิน 85 ตัวอักษร", max_chars=85)
                                         st.markdown("---")
                                         p_rcpt_date = c_d1.date_input("ลงวันที่ (ใบเสร็จ)", value=issue_default, key=f"p_rcpt_date_{index}")
                                         p_issue = c_d2.date_input("วันที่ออกใบอนุญาต", value=issue_default, key=f"p_issue_{index}")
