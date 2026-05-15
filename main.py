@@ -57,20 +57,20 @@ def create_pdf_overlay(data):
     
     # 2. ตั้งค่าพิกัดเริ่มต้น (Base Coordinates) จากการจูน V.17
     # คุณสามารถก๊อปปี้พิกัดเหล่านี้ไปวางใน if/elif ด้านล่างเพื่อแยกจูนแต่ละไฟล์ได้ครับ
-    y1, y2, y3, y4 = 638, 612, 592, 572
+    y1, y2, y3, y4 = 638, 612, 592, 573
     y5, y6, y7, y8 = 549, 529, 512, 492
     y9, y10, y11, y12 = 468, 450, 255, 234
 
     if val_43 and not val_44:
         template_file = "template4.3.pdf"
-        y1, y2, y3, y4 = 638, 612, 592, 572
+        y1, y2, y3, y4 = 638, 612, 592, 573
         y5, y6, y7, y8 = 549, 529, 512, 492
-        y9, y10, y11, y12 = 468, 450, 239, 211
+        y9, y10, y11, y12 = 468, 450, 239, 212
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
-        y1, y2, y3, y4 = 638, 612, 592, 572
+        y1, y2, y3, y4 = 638, 612, 592, 573
         y5, y6, y7, y8 = 549, 529, 512, 492
-        y9, y10, y11, y12 = 468, 450, 225, 195
+        y9, y10, y11, y12 = 468, 450, 220, 195
     else:
         template_file = "template.pdf"
 
@@ -581,7 +581,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.23 (Micro-adjustment Refinements)")
+        st.caption("Version: V.24 (Font 10.0 & Final Tweaks)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
