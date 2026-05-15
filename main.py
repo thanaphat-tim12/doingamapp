@@ -14,6 +14,8 @@ import base64
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.colors import pink, lightgrey, blue
 from pypdf import PdfReader, PdfWriter
 import io
 import os
