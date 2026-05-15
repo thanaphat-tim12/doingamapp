@@ -79,9 +79,9 @@ def create_pdf_overlay(data):
     y7 = 512 # ขยับขึ้นตามคำขอ (เดิม 506)
     y8 = 486
     y9 = 461
-    y10 = 445 # ยกขึ้นตามรูป (เดิม 441)
-    y11 = 245 # ยกขึ้นตามรูป (เดิม 241)
-    y12 = 220 # ยกขึ้นตามรูป (เดิม 216)
+    y10 = 450 # ปรับตามที่ผู้ใช้พิมพ์มา
+    y11 = 255 # ปรับตามที่ผู้ใช้พิมพ์มา
+    y12 = 235 # ปรับตามที่ผู้ใช้พิมพ์มา
 
     # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
     can.drawString(90, y1, str(data.get('p_license_book', '')))
@@ -95,6 +95,9 @@ def create_pdf_overlay(data):
     # วาดบรรทัดที่ 3: ที่อยู่เจ้าของ
     can.drawString(125, y3, str(data.get('p_addr', '')))
     can.drawString(205, y3, str(data.get('p_moo', '')))
+    can.drawString(280, y3, str(data.get('p_tumbon', '')))
+    can.drawString(410, y3, str(data.get('p_amphoe', '')))
+    can.drawString(520, y3, str(data.get('p_province', '')))
     
     # วาดบรรทัดที่ 4: CID / โทรศัพท์
     can.drawString(cid_x, y4, format_cid(data.get('p_cid', '')))
@@ -582,7 +585,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.12 (Cleanup & Lift Rows)")
+        st.caption("Version: V.13 (Owner Addr Restore & Custom Y)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
@@ -1007,6 +1010,11 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_addr = col_f1.text_input("ที่อยู่/บ้านเลขที่", value=row.get(cols['address'], ''), key=f"p_addr_{index}")
                                         p_moo = col_f2.text_input("หมู่ที่", value=row.get(cols['moo'], ''), key=f"p_moo_{index}")
                                         
+                                        c_addr_o1, c_addr_o2, c_addr_o3 = st.columns(3)
+                                        p_tumbon = c_addr_o1.text_input("ตำบล", value="", key=f"p_t_{index}")
+                                        p_amphoe = c_addr_o2.text_input("อำเภอ", value="", key=f"p_a_{index}")
+                                        p_province = c_addr_o3.text_input("จังหวัด", value="", key=f"p_p_{index}")
+                                        
                                         st.markdown("---")
                                         st.markdown("**ข้อมูลสถานประกอบการ**")
                                         
@@ -1079,6 +1087,9 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             "p_nationality": p_nationality,
                                             "p_addr": p_addr,
                                             "p_moo": p_moo,
+                                            "p_tumbon": p_tumbon,
+                                            "p_amphoe": p_amphoe,
+                                            "p_province": p_province,
                                             "p_cid": p_cid,
                                             "p_phone": p_phone,
                                             "p_shop": p_shop,
