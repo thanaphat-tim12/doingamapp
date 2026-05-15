@@ -69,10 +69,9 @@ def create_pdf_overlay(data):
         # y9, y10, y11, y12 = 468, 450, 255, 234
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
-        # แก้พิกัดเฉพาะ Template 4.2 ตรงนี้ (ถ้าต้องการแยก)
-        # y1, y2, y3, y4 = 638, 612, 592, 572
-        # y5, y6, y7, y8 = 549, 529, 512, 492
-        # y9, y10, y11, y12 = 468, 450, 255, 234
+        y1, y2, y3, y4 = 638, 612, 592, 572
+        y5, y6, y7, y8 = 549, 529, 512, 492
+        y9, y10, y11, y12 = 468, 450, 255, 234
     else:
         template_file = "template.pdf"
 
@@ -583,7 +582,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.18 (Independent Templates Support)")
+        st.caption("Version: V.20 (Independent Tweak Refinements)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
