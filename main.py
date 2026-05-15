@@ -71,14 +71,14 @@ def create_pdf_overlay(data):
     # 3. เริ่มการวาดข้อความโดยใช้พิกัดจากไม้บรรทัดดิจิทัลโดยตรง (Direct Grid Lock)
     # แนวแกน Y (ความสูง) - ปรับจูน V.10 (ลดฟอนต์ 11.0 และปรับสมดุล)
     y1 = 638
-    y2 = 611
+    y2 = 612
     y3 = 591
     y4 = 571
     y5 = 549 # ค่านี้ตรงแล้ว
     y6 = 529 # ค่านี้ตรงแล้ว
     y7 = 512 # ขยับขึ้นตามคำขอ (เดิม 506)
     y8 = 486
-    y9 = 461
+    y9 = 465
     y10 = 450 # ปรับตามที่ผู้ใช้พิมพ์มา
     y11 = 255 # ปรับตามที่ผู้ใช้พิมพ์มา
     y12 = 235 # ปรับตามที่ผู้ใช้พิมพ์มา
@@ -585,7 +585,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.13 (Owner Addr Restore & Custom Y)")
+        st.caption("Version: V.14 (Fine-tune y2 & y9)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
