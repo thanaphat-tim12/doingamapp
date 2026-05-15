@@ -22,6 +22,7 @@ import os
 
 try:
     pdfmetrics.registerFont(TTFont('THSarabunNew', 'THSarabunNew.ttf'))
+    pdfmetrics.registerFont(TTFont('THSarabun', 'THSarabunNew.ttf')) # ลงทะเบียนชื่อ THSarabun เพิ่มเติม
 except Exception as e:
     print(f"Font registration error: {e}")
 
@@ -35,7 +36,7 @@ def format_cid(cid):
 def create_pdf_overlay(data):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
-    can.setFont('THSarabunNew', 11.0) # ลดขนาดฟอนต์ให้เล็กลงตาม PDF
+    can.setFont('THSarabun', 10.0) # เปลี่ยนเป็น THSarabun และลดขนาดเหลือ 10.0
     
     base_h = 841.89
     
@@ -178,7 +179,7 @@ def create_pdf_overlay(data):
 def create_app_pdf_overlay(data):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
-    can.setFont('THSarabunNew', 13.0)
+    can.setFont('THSarabun', 10.0)
     
     # Use EXACT coordinates from the original document's words, minus a small offset to sit on the dotted line
     offset_y = -3.0
@@ -592,7 +593,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.28 (Special_X 170 & Font 11.0)")
+        st.caption("Version: V.29 (THSarabun & Font 10.0)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
