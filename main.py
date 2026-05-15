@@ -75,8 +75,8 @@ def create_pdf_overlay(data):
     y5 = 549 # ค่านี้ตรงแล้ว
     y6 = 529 # ค่านี้ตรงแล้ว
     y7 = 512 # ขยับขึ้นตามคำขอ (เดิม 506)
-    y8 = 490
-    y9 = 467
+    y8 = 492
+    y9 = 468
     y10 = 450 # ปรับตามที่ผู้ใช้พิมพ์มา
     y11 = 255 # ปรับตามที่ผู้ใช้พิมพ์มา
     y12 = 234 # ปรับตามที่ผู้ใช้พิมพ์มา
@@ -94,8 +94,8 @@ def create_pdf_overlay(data):
     can.drawString(125, y3, str(data.get('p_addr', '')))
     can.drawString(205, y3, str(data.get('p_moo', '')))
     can.drawString(280, y3, str(data.get('p_tumbon', '')))
-    can.drawString(420, y3, str(data.get('p_amphoe', ''))) # ขยับไป 420
-    can.drawString(535, y3, str(data.get('p_province', ''))) # ขยับไป 535
+    can.drawString(400, y3, str(data.get('p_amphoe', ''))) # ขยับไป 420
+    can.drawString(500, y3, str(data.get('p_province', ''))) # ขยับไป 535
     
     # วาดบรรทัดที่ 4: CID / โทรศัพท์
     can.drawString(cid_x, y4, format_cid(data.get('p_cid', '')))
@@ -111,8 +111,8 @@ def create_pdf_overlay(data):
     can.drawString(120, y7, str(data.get('p_shop_addr', '')))
     can.drawString(205, y7, str(data.get('p_shop_moo', '')))
     can.drawString(280, y7, str(data.get('p_shop_tumbon', '')))
-    can.drawString(420, y7, str(data.get('p_shop_amphoe', ''))) # ขยับไป 420
-    can.drawString(535, y7, str(data.get('p_shop_province', ''))) # ขยับไป 535
+    can.drawString(400, y7, str(data.get('p_shop_amphoe', ''))) # ขยับไป 420
+    can.drawString(500, y7, str(data.get('p_shop_province', ''))) # ขยับไป 535
     
     # วาดบรรทัดที่ 8: โทรศัพท์สถานประกอบการ
     can.drawString(150, y8, str(data.get('p_shop_phone', '')))
@@ -586,7 +586,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.16 (Re-add Shop Addr & Center X)")
+        st.caption("Version: V.17 (Final X/Y Tweaks)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
