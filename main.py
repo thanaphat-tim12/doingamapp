@@ -68,42 +68,56 @@ def create_pdf_overlay(data):
         # template.pdf (แบบปกติ) - ใช้ค่า default ด้านบน
         pass
 
-    # 3. เริ่มการวาดข้อความโดยใช้ตัวแปรที่ตั้งไว้
-    y1 = base_h - 200.17 - y_offset
+    # 3. เริ่มการวาดข้อความโดยใช้พิกัดจากไม้บรรทัดดิจิทัลโดยตรง (Direct Grid Lock)
+    # แนวแกน Y (ความสูง)
+    y1 = 645
+    y2 = 618
+    y3 = 598
+    y4 = 578
+    y5 = 553
+    y6 = 533
+    y7 = 513
+    y8 = 493
+    y9 = 468
+    y10 = 448
+    y11 = 248
+    y12 = 223
+
+    # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
     can.drawString(90, y1, str(data.get('p_license_book', '')))
     can.drawString(155, y1, str(data.get('p_license_no', '')))
     can.drawString(210, y1, str(data.get('p_license_year', '')))
     
-    y2 = base_h - 225.66 - y_offset
+    # วาดบรรทัดที่ 2: ชื่อ / สัญชาติ
     can.drawString(name_x, y2, str(data.get('p_name', '')))
     can.drawString(510, y2, str(data.get('p_nationality', '')))
     
-    y3 = base_h - 245.16 - y_offset
+    # วาดบรรทัดที่ 3: ที่อยู่
     can.drawString(125, y3, str(data.get('p_addr', '')))
     can.drawString(205, y3, str(data.get('p_moo', '')))
     
-    y4 = base_h - 264.66 - y_offset
+    # วาดบรรทัดที่ 4: CID / โทรศัพท์
     can.drawString(cid_x, y4, format_cid(data.get('p_cid', '')))
     can.drawString(380, y4, str(data.get('p_phone', '')))
     
-    y5 = base_h - 290.16 - y_offset
+    # วาดบรรทัดที่ 5: ชื่อสถานประกอบการ
     can.drawString(shop_x, y5, str(data.get('p_shop', '')))
     
-    y6 = base_h - 309.66 - y_offset
+    # วาดบรรทัดที่ 6: ประเภทกิจการ
     can.drawString(110, y6, str(data.get('p_type', '')))
     
-    y7 = base_h - 329.16 - y_offset
+    # วาดบรรทัดที่ 7: ที่อยู่สถานประกอบการ
     can.drawString(120, y7, str(data.get('p_shop_addr', '')))
     can.drawString(205, y7, str(data.get('p_shop_moo', '')))
     
-    y8 = base_h - 348.66 - y_offset
+    # วาดบรรทัดที่ 8: โทรศัพท์สถานประกอบการ
     can.drawString(150, y8, str(data.get('p_shop_phone', '')))
     
-    y9 = base_h - 374.16 - y_offset
+    # วาดบรรทัดที่ 9: ค่าธรรมเนียม
     can.drawString(240, y9, str(data.get('p_fee', '')))
     can.drawString(330, y9, str(data.get('p_fee_text', '')))
     
-    y10 = base_h - receipt_y_diff - y_offset
+    # วาดบรรทัดที่ 10: ใบเสร็จรับเงิน
     rcpt_book = str(data.get('p_rcpt_book', '')).strip()
     rcpt_no = str(data.get('p_rcpt_no', '')).strip()
     rcpt_combined = rcpt_book
@@ -116,12 +130,12 @@ def create_pdf_overlay(data):
     can.drawString(170, y10, rcpt_combined)
     can.drawString(365, y10, str(data.get('p_rcpt_date', '')))
     
-    y11 = base_h - 601.66 - y_offset # ขยับลงอีกนิด (เดิม 594.66)
+    # วาดบรรทัดที่ 11: วันออกใบอนุญาต (ข้อ 5)
     can.drawString(date_x, y11, str(data.get('issue_day', '')))
     can.drawString(date_x + 60, y11, str(data.get('issue_month', '')))
     can.drawString(date_x + 155, y11, str(data.get('issue_year', '')))
     
-    y12 = base_h - 628.16 - y_offset # ขยับลงอีกหน่อย (เดิม 620.16)
+    # วาดบรรทัดที่ 12: วันสิ้นอายุ (ข้อ 6)
     can.drawString(date_x, y12, str(data.get('expire_day', '')))
     can.drawString(date_x + 60, y12, str(data.get('expire_month', '')))
     can.drawString(date_x + 155, y12, str(data.get('expire_year', '')))
@@ -568,7 +582,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.7 (Fine-tune Bottom Dates)")
+        st.caption("Version: V.8 (Direct Grid Lock)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
