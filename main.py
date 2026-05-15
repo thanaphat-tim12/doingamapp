@@ -55,31 +55,28 @@ def create_pdf_overlay(data):
     special_y_43 = base_h - 578
     special_y_44 = base_h - 600
     
-    template_file = "template.pdf"
-    
-    # 2. ปรับเปลี่ยนพิกัดตามแต่ละ Template (เฉพาะจุดที่แตกต่างกันจริงๆ)
+    # 2. ตั้งค่าพิกัดเริ่มต้น (Base Coordinates) จากการจูน V.17
+    # คุณสามารถก๊อปปี้พิกัดเหล่านี้ไปวางใน if/elif ด้านล่างเพื่อแยกจูนแต่ละไฟล์ได้ครับ
+    y1, y2, y3, y4 = 638, 612, 592, 572
+    y5, y6, y7, y8 = 549, 529, 512, 492
+    y9, y10, y11, y12 = 468, 450, 255, 234
+
     if val_43 and not val_44:
         template_file = "template4.3.pdf"
+        # แก้พิกัดเฉพาะ Template 4.3 ตรงนี้ (ถ้าต้องการแยก)
+        # y1, y2, y3, y4 = 638, 612, 592, 572
+        # y5, y6, y7, y8 = 549, 529, 512, 492
+        # y9, y10, y11, y12 = 468, 450, 255, 234
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
+        # แก้พิกัดเฉพาะ Template 4.2 ตรงนี้ (ถ้าต้องการแยก)
+        # y1, y2, y3, y4 = 638, 612, 592, 572
+        # y5, y6, y7, y8 = 549, 529, 512, 492
+        # y9, y10, y11, y12 = 468, 450, 255, 234
     else:
-        # template.pdf (แบบปกติ) - ใช้ค่า default ด้านบน
-        pass
+        template_file = "template.pdf"
 
-    # 3. เริ่มการวาดข้อความโดยใช้พิกัดจากไม้บรรทัดดิจิทัลโดยตรง (Direct Grid Lock)
-    # แนวแกน Y (ความสูง) - ปรับจูน V.10 (ลดฟอนต์ 11.0 และปรับสมดุล)
-    y1 = 638
-    y2 = 612
-    y3 = 591
-    y4 = 572
-    y5 = 549 # ค่านี้ตรงแล้ว
-    y6 = 529 # ค่านี้ตรงแล้ว
-    y7 = 512 # ขยับขึ้นตามคำขอ (เดิม 506)
-    y8 = 492
-    y9 = 468
-    y10 = 450 # ปรับตามที่ผู้ใช้พิมพ์มา
-    y11 = 255 # ปรับตามที่ผู้ใช้พิมพ์มา
-    y12 = 234 # ปรับตามที่ผู้ใช้พิมพ์มา
+    # 3. เริ่มการวาดข้อความโดยใช้พิกัดที่ถูกกำหนดด้านบน (Direct Grid Lock)
 
     # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
     can.drawString(90, y1, str(data.get('p_license_book', '')))
@@ -586,7 +583,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.17 (Final X/Y Tweaks)")
+        st.caption("Version: V.18 (Independent Templates Support)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
