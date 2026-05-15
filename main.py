@@ -69,19 +69,19 @@ def create_pdf_overlay(data):
         pass
 
     # 3. เริ่มการวาดข้อความโดยใช้พิกัดจากไม้บรรทัดดิจิทัลโดยตรง (Direct Grid Lock)
-    # แนวแกน Y (ความสูง)
-    y1 = 645
-    y2 = 618
-    y3 = 598
-    y4 = 578
-    y5 = 553
-    y6 = 533
-    y7 = 513
-    y8 = 493
-    y9 = 468
-    y10 = 448
-    y11 = 248
-    y12 = 223
+    # แนวแกน Y (ความสูง) - ปรับจูน V.9 (กดลง 4 หน่วยจาก V.8)
+    y1 = 641
+    y2 = 614
+    y3 = 594
+    y4 = 574
+    y5 = 549
+    y6 = 529
+    y7 = 509
+    y8 = 489
+    y9 = 464
+    y10 = 444
+    y11 = 244
+    y12 = 219
 
     # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
     can.drawString(90, y1, str(data.get('p_license_book', '')))
@@ -582,7 +582,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.8 (Direct Grid Lock)")
+        st.caption("Version: V.9 (Press Down 4 Units)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
