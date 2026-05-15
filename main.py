@@ -182,7 +182,7 @@ def create_app_pdf_overlay(data):
     can.setFont('THSarabun', 10.0)
     
     # Use EXACT coordinates from the original document's words, minus a small offset to sit on the dotted line
-    offset_y = -3.0
+    offset_y = -6.0
     
     can.drawString(260, 648.2 - offset_y, str(data.get('p_type', '')))
     can.drawString(360, 620.6 - offset_y, str(data.get('app_location', 'อบต.ดอยงาม')))
@@ -593,7 +593,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.30 (Fix Duplicate Button ID)")
+        st.caption("Version: V.31 (App Form Y+3 Tweak)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
