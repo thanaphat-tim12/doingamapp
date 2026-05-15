@@ -35,7 +35,7 @@ def format_cid(cid):
 def create_pdf_overlay(data):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
-    can.setFont('THSarabunNew', 12.0)
+    can.setFont('THSarabunNew', 11.0) # ลดขนาดฟอนต์ให้เล็กลงตาม PDF
     
     base_h = 841.89
     
@@ -69,19 +69,19 @@ def create_pdf_overlay(data):
         pass
 
     # 3. เริ่มการวาดข้อความโดยใช้พิกัดจากไม้บรรทัดดิจิทัลโดยตรง (Direct Grid Lock)
-    # แนวแกน Y (ความสูง) - ปรับจูน V.9 (กดลง 4 หน่วยจาก V.8)
-    y1 = 641
-    y2 = 614
-    y3 = 594
-    y4 = 574
-    y5 = 549
-    y6 = 529
-    y7 = 509
-    y8 = 489
-    y9 = 464
-    y10 = 444
-    y11 = 244
-    y12 = 219
+    # แนวแกน Y (ความสูง) - ปรับจูน V.10 (ลดฟอนต์ 11.0 และปรับสมดุล)
+    y1 = 638
+    y2 = 611
+    y3 = 591
+    y4 = 571
+    y5 = 549 # ค่านี้ตรงแล้ว
+    y6 = 529 # ค่านี้ตรงแล้ว
+    y7 = 506
+    y8 = 486
+    y9 = 461
+    y10 = 441
+    y11 = 241
+    y12 = 216
 
     # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
     can.drawString(90, y1, str(data.get('p_license_book', '')))
@@ -90,7 +90,7 @@ def create_pdf_overlay(data):
     
     # วาดบรรทัดที่ 2: ชื่อ / สัญชาติ
     can.drawString(name_x, y2, str(data.get('p_name', '')))
-    can.drawString(510, y2, str(data.get('p_nationality', '')))
+    can.drawString(500, y2, str(data.get('p_nationality', ''))) # ขยับมาทางซ้ายนิดหน่อย
     
     # วาดบรรทัดที่ 3: ที่อยู่
     can.drawString(125, y3, str(data.get('p_addr', '')))
@@ -582,7 +582,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.9 (Press Down 4 Units)")
+        st.caption("Version: V.10 (Font 11.0 & Fine-tune)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
