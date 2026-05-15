@@ -50,7 +50,7 @@ def create_pdf_overlay(data):
     cid_x = 165
     shop_x = 230
     receipt_y_diff = 396.0 # ปรับให้ตรงบรรทัดใบเสร็จ (Y=445)
-    date_x = 300
+    date_x = 310 # ขยับมาทางขวาหน่อยเพื่อให้กึ่งกลางช่อง
     special_x = 225
     special_y_43 = base_h - 578
     special_y_44 = base_h - 600
@@ -116,12 +116,12 @@ def create_pdf_overlay(data):
     can.drawString(170, y10, rcpt_combined)
     can.drawString(365, y10, str(data.get('p_rcpt_date', '')))
     
-    y11 = base_h - 594.66 - y_offset
+    y11 = base_h - 601.66 - y_offset # ขยับลงอีกนิด (เดิม 594.66)
     can.drawString(date_x, y11, str(data.get('issue_day', '')))
     can.drawString(date_x + 60, y11, str(data.get('issue_month', '')))
     can.drawString(date_x + 155, y11, str(data.get('issue_year', '')))
     
-    y12 = base_h - 620.16 - y_offset
+    y12 = base_h - 628.16 - y_offset # ขยับลงอีกหน่อย (เดิม 620.16)
     can.drawString(date_x, y12, str(data.get('expire_day', '')))
     can.drawString(date_x + 60, y12, str(data.get('expire_month', '')))
     can.drawString(date_x + 155, y12, str(data.get('expire_year', '')))
@@ -568,7 +568,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.6 (Shift Up 1 Line)")
+        st.caption("Version: V.7 (Fine-tune Bottom Dates)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
