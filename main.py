@@ -44,17 +44,14 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
-    # ดึงค่าจาก st.session_state (ระบบ Fine-tune)
-    fine_tune_y = st.session_state.get('pdf_fine_tune_y', 0.0)
-    fine_tune_x = st.session_state.get('pdf_fine_tune_x', 0.0)
-    
-    y_offset = 12.0 + fine_tune_y # ปรับค่าตั้งต้นให้ต่ำลงตามรูป
-    name_x = 265 + fine_tune_x # ขยับมาทางซ้ายอีกหน่อย
-    cid_x = 155 + fine_tune_x
-    shop_x = 220 + fine_tune_x
-    receipt_y_diff = 380.0
-    date_x = 285 + fine_tune_x
-    special_x = 230 + fine_tune_x
+    # ปรับพิกัดตาม "ไม้บรรทัดดิจิทัล" ที่คำนวณแล้ว
+    y_offset = 1.0
+    name_x = 275
+    cid_x = 165
+    shop_x = 230
+    receipt_y_diff = 396.0 # ปรับให้ตรงบรรทัดใบเสร็จ (Y=445)
+    date_x = 300
+    special_x = 225
     special_y_43 = base_h - 578
     special_y_44 = base_h - 600
     
@@ -581,71 +578,9 @@ with st.sidebar:
                     mask |= df[c].str.contains(term, na=False)
             df = df[mask].copy()
 
-    # ส่วนสำหรับ Debug และการปรับจูน
-    with st.expander("🛠️ ตั้งค่าขั้นสูง (Debug/Fine-tune)"):
+    # ส่วนสำหรับ Debug
+    with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        
-        st.markdown("---")
-        st.markdown("**🎯 ปรับตำแหน่งตัวหนังสือใน PDF**")
-        st.info("ถ้าขยับตัวเลื่อนแล้ว 'พิมพ์' ใหม่ ตำแหน่งจะเปลี่ยนตามทันทีครับ")
-        
-        # ปรับความสูง (Y)
-        st.slider(
-            "ปรับระดับ สูง-ต่ำ (ทั้งแผ่น)", 
-            min_value=-50.0, max_value=50.0, 
-            key='pdf_fine_tune_y',
-            help="ค่าบวกจะทำให้ตัวหนังสือต่ำลง ค่าลบจะทำให้สูงขึ้น"
-        )
-        
-        # ปรับซ้าย-ขวา (X)
-        st.slider(
-            "ปรับระดับ ซ้าย-ขวา (ทั้งแผ่น)", 
-            min_value=-50.0, max_value=50.0, 
-            key='pdf_fine_tune_x',
-            help="ค่าบวกจะไปทางขวา ค่าลบจะไปทางซ้าย"
-        )
-        
-        st.markdown("---")
-        st.markdown("**ปุ่มช่วยหาพิกัด (Grid Ruler)**")
-        if st.button("📏 สร้างไฟล์ไม้บรรทัดดิจิทัล (Grid)"):
-            grid_packet = io.BytesIO()
-            grid_can = canvas.Canvas(grid_packet, pagesize=(595.27, 841.89))
-            grid_can.setFont("Helvetica", 8)
-            
-            # Draw Y grid
-            for y in range(0, 842, 10):
-                color = pink if y % 50 == 0 else lightgrey
-                grid_can.setStrokeColor(color)
-                grid_can.setLineWidth(0.5 if y % 50 == 0 else 0.2)
-                grid_can.line(0, y, 595, y)
-                if y % 50 == 0: grid_can.drawString(5, y + 2, f"y={y}")
-            
-            # Draw X grid
-            for x in range(0, 596, 10):
-                color = blue if x % 50 == 0 else lightgrey
-                grid_can.setStrokeColor(color)
-                grid_can.setLineWidth(0.5 if x % 50 == 0 else 0.2)
-                grid_can.line(x, 0, x, 842)
-                if x % 50 == 0: grid_can.drawString(x + 2, 5, f"x={x}")
-            
-            grid_can.save()
-            grid_packet.seek(0)
-            
-            # Merge with current template
-            try:
-                template_to_use = "template.pdf" # Default
-                reader = PdfReader(open(template_to_use, "rb"))
-                writer = PdfWriter()
-                page = reader.pages[0]
-                page.merge_page(PdfReader(grid_packet).pages[0])
-                writer.add_page(page)
-                
-                final_grid = io.BytesIO()
-                writer.write(final_grid)
-                st.download_button("📥 ดาวน์โหลดไม้บรรทัด (ทับ Template)", final_grid.getvalue(), "ruler_grid.pdf")
-            except:
-                st.error("ไม่พบไฟล์ template.pdf")
-
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
