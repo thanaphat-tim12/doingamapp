@@ -42,15 +42,19 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
-    y_offset = 18.0
-    name_x = 285
-    cid_x = 165
-    shop_x = 230
-    receipt_y_diff = 388.0 # ระยะจากด้านบนถึงบรรทัดใบเสร็จ
-    date_x = 300 # พิกัด X เริ่มต้นสำหรับ วัน/เดือน/ปี ของบรรทัดออกใบอนุญาต/หมดอายุ
-    special_x = 230 # พิกัด X สำหรับเงื่อนไขพิเศษ 4.3/4.4
-    special_y_43 = base_h - 578 # พิกัด Y สำหรับ 4.3
-    special_y_44 = base_h - 600 # พิกัด Y สำหรับ 4.4
+    # ดึงค่าจาก st.session_state ถ้ามีการปรับจูนจากหน้าเว็บ
+    fine_tune_y = st.session_state.get('pdf_fine_tune_y', 0.0)
+    fine_tune_x = st.session_state.get('pdf_fine_tune_x', 0.0)
+    
+    y_offset = 2.0 + fine_tune_y # เริ่มต้นที่ 2.0 ตามรูปล่าสุด + ค่าปรับจูน
+    name_x = 275 + fine_tune_x
+    cid_x = 155 + fine_tune_x
+    shop_x = 220 + fine_tune_x
+    receipt_y_diff = 380.0
+    date_x = 285 + fine_tune_x
+    special_x = 230 + fine_tune_x
+    special_y_43 = base_h - 578
+    special_y_44 = base_h - 600
     
     template_file = "template.pdf"
     
@@ -575,11 +579,30 @@ with st.sidebar:
                     mask |= df[c].str.contains(term, na=False)
             df = df[mask].copy()
 
-    # ส่วนสำหรับ Debug
-    with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
+    # ส่วนสำหรับ Debug และการปรับจูน
+    with st.expander("🛠️ ตั้งค่าขั้นสูง (Debug/Fine-tune)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.write("หัวตารางที่ระบบตรวจเจอ:")
-        st.code(list(df.columns))
+        
+        st.markdown("---")
+        st.markdown("**🎯 ปรับตำแหน่งตัวหนังสือใน PDF**")
+        st.info("ถ้าตัวหนังสือลอย/จม หรือไม่ตรงเส้น ให้ขยับที่นี่ครับ")
+        
+        # ปรับความสูง (Y)
+        st.session_state['pdf_fine_tune_y'] = st.slider(
+            "ปรับระดับ สูง-ต่ำ (ทั้งแผ่น)", 
+            min_value=-30.0, max_value=30.0, 
+            value=st.session_state.get('pdf_fine_tune_y', 0.0),
+            help="ค่าบวกจะทำให้ตัวหนังสือต่ำลง ค่าลบจะทำให้สูงขึ้น"
+        )
+        
+        # ปรับซ้าย-ขวา (X)
+        st.session_state['pdf_fine_tune_x'] = st.slider(
+            "ปรับระดับ ซ้าย-ขวา (ทั้งแผ่น)", 
+            min_value=-30.0, max_value=30.0, 
+            value=st.session_state.get('pdf_fine_tune_x', 0.0),
+            help="ค่าบวกจะไปทางขวา ค่าลบจะไปทางซ้าย"
+        )
+        
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
