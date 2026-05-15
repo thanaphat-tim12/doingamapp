@@ -44,8 +44,8 @@ def create_pdf_overlay(data):
     val_44 = str(data.get('p_44', '')).strip()
     
     # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
-    # ปรับพิกัดตาม "ไม้บรรทัดดิจิทัล" V.4 (ล็อคพิกัดล่าสุด)
-    y_offset = 13.5
+    # ปรับพิกัด V.5 (ถอดตัวแปรซ้ำซ้อนออกแล้ว)
+    y_offset = 24.0
     name_x = 275
     cid_x = 165
     shop_x = 230
@@ -57,29 +57,16 @@ def create_pdf_overlay(data):
     
     template_file = "template.pdf"
     
-    # 2. ปรับเปลี่ยนพิกัดตามแต่ละ Template (แยกตั้งค่าที่นี่ได้เลย)
+    # 2. ปรับเปลี่ยนพิกัดตามแต่ละ Template (เฉพาะจุดที่แตกต่างกันจริงๆ)
     if val_43 and not val_44:
         template_file = "template4.3.pdf"
-        # พิกัดสำหรับ template4.3.pdf
-        y_offset = 18.7
-        name_x = 275
-        cid_x = 155
-        shop_x = 220
-        receipt_y_diff = 380.0
-        date_x = 285
-        special_x = 230 
+        # หาก template 4.3 มีระยะบรรทัดต่างจากปกติ ให้แก้ตรงนี้
+        # y_offset = 24.0 
     elif val_43 and val_44:
         template_file = "template 4.2.pdf"
-        # ตัวอย่างการปรับแยก:
-        # y_offset = 15.0
     else:
-        # พิกัดสำหรับ template.pdf (แบบปกติ) - ปรับจูนให้ตรงเป๊ะ
-        y_offset = 18.7
-        name_x = 275
-        cid_x = 155
-        shop_x = 220
-        receipt_y_diff = 380.0
-        date_x = 285 # ขยับมาทางซ้ายสำหรับแบบปกติ
+        # template.pdf (แบบปกติ) - ใช้ค่า default ด้านบน
+        pass
 
     # 3. เริ่มการวาดข้อความโดยใช้ตัวแปรที่ตั้งไว้
     y1 = base_h - 200.17 - y_offset
@@ -581,7 +568,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.4 (Fix Date Error & Pos)")
+        st.caption("Version: V.5 (Clean Overrides & Pos)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
