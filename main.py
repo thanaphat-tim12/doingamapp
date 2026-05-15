@@ -51,7 +51,7 @@ def create_pdf_overlay(data):
     shop_x = 230
     receipt_y_diff = 396.0 # ปรับให้ตรงบรรทัดใบเสร็จ (Y=445)
     date_x = 310 # ขยับมาทางขวาหน่อยเพื่อให้กึ่งกลางช่อง
-    special_x = 145 # ขยับมาทางซ้ายให้ตรงกับ 4.1, 4.2 (เดิม 225)
+    special_x = 170 # ขยับมาทางซ้ายให้ตรงกับ 4.1, 4.2 (เดิม 225)
     type_x = 110 # ค่าเริ่มต้นบรรทัดที่ 6
     special_y_43 = base_h - 578
     special_y_44 = base_h - 600
@@ -592,7 +592,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.27 (Special_X 145 & Revert Type_X)")
+        st.caption("Version: V.28 (Special_X 170 & Font 11.0)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
