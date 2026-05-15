@@ -52,6 +52,7 @@ def create_pdf_overlay(data):
     receipt_y_diff = 396.0 # ปรับให้ตรงบรรทัดใบเสร็จ (Y=445)
     date_x = 310 # ขยับมาทางขวาหน่อยเพื่อให้กึ่งกลางช่อง
     special_x = 225
+    type_x = 110 # ค่าเริ่มต้นบรรทัดที่ 6
     special_y_43 = base_h - 578
     special_y_44 = base_h - 600
     
@@ -70,6 +71,7 @@ def create_pdf_overlay(data):
         y1, y2, y3, y4 = 638, 612, 592, 573
         y5, y6, y7, y8 = 549, 529, 512, 492
         y9, y10, y11, y12 = 468, 450, 239, 212
+        type_x = 170 # ปรับตามคำขอ (แบบ 4.3)
         # คุณสามารถปรับแกน X เฉพาะของ 4.3 ได้ที่นี่ครับ:
         # name_x = 275  # ปรับตัวเลขนี้เพื่อขยับชื่อ
         # shop_x = 230  # ปรับตัวเลขนี้เพื่อขยับชื่อร้าน
@@ -78,6 +80,7 @@ def create_pdf_overlay(data):
         y1, y2, y3, y4 = 638, 612, 592, 573
         y5, y6, y7, y8 = 549, 529, 512, 492
         y9, y10, y11, y12 = 468, 450, 220, 195
+        type_x = 170 # ปรับตามคำขอ (แบบ 4.2)
         # คุณสามารถปรับแกน X เฉพาะของ 4.2 ได้ที่นี่ครับ:
         # name_x = 275 
         # shop_x = 230
@@ -110,7 +113,7 @@ def create_pdf_overlay(data):
     can.drawString(shop_x, y5, str(data.get('p_shop', '')))
     
     # วาดบรรทัดที่ 6: ประเภทกิจการ
-    can.drawString(110, y6, str(data.get('p_type', '')))
+    can.drawString(type_x, y6, str(data.get('p_type', '')))
     
     # วาดบรรทัดที่ 7: ที่อยู่สถานประกอบการ
     can.drawString(120, y7, str(data.get('p_shop_addr', '')))
@@ -591,7 +594,7 @@ with st.sidebar:
     # ส่วนสำหรับ Debug
     with st.expander("🛠️ ตรวจสอบหัวตาราง (Debug)"):
         st.write(f"ชีตปัจจุบัน: {target_sheet}")
-        st.caption("Version: V.25 (Independent X-axis Overrides)")
+        st.caption("Version: V.26 (Type_X 170 for 4.2/4.3)")
         if st.button("ล้างแคชและโหลดใหม่"):
             st.cache_data.clear()
             st.rerun()
