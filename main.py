@@ -795,9 +795,16 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                         st.error("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง")
 
     # ส่วนค้นหา
-    search = st.text_input("🔍 ค้นหาชื่อ หรือ เลขบัตร...", placeholder="เช่น 3570500xxxxxx")
-    if search:
-        search_term = search.strip().replace('-', '').replace(' ', '')
+    col_search1, col_search2 = st.columns([8, 1])
+    search = col_search1.text_input("🔍 ค้นหาชื่อ หรือ เลขบัตร...", placeholder="เช่น 3570500xxxxxx")
+    
+    with col_search2:
+        st.markdown("<div style='margin-top: 27px;'></div>", unsafe_allow_html=True)
+        search_btn = st.button("ค้นหา", use_container_width=True)
+        
+    if search or search_btn:
+        if search:
+            search_term = search.strip().replace('-', '').replace(' ', '')
         
         # 1. ลองค้นหาจากคอลัมน์หลักก่อน (ชื่อ และ เลขบัตร)
         mask = pd.Series(False, index=df.index)
