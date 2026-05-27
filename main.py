@@ -783,7 +783,13 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                 else:
                     new_entry[f] = t.text_input(f, value="")
 
-            if st.form_submit_button("💾 บันทึกข้อมูลลงชีต", type="primary"):
+            col_submit, col_cancel = st.columns(2)
+            with col_submit:
+                submitted = st.form_submit_button("💾 บันทึกข้อมูล", type="primary", use_container_width=True)
+            with col_cancel:
+                canceled = st.form_submit_button("❌ ยกเลิก", use_container_width=True)
+
+            if submitted:
                 with st.spinner(f"กำลังเพิ่มข้อมูลลงชีต {target_add_sheet}..."):
                     if add_gsheet(new_entry, sheet_name=target_add_sheet):
                         st.success(f"✅ เพิ่มข้อมูลลงชีต '{target_add_sheet}' สำเร็จ!")
@@ -793,6 +799,10 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                         st.rerun()
                     else:
                         st.error("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง")
+            
+            if canceled:
+                st.session_state['show_add_form'] = False
+                st.rerun()
 
     # ส่วนค้นหา
     col_search1, col_search2 = st.columns([8, 1])
