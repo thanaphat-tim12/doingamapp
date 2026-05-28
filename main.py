@@ -153,14 +153,14 @@ def create_pdf_overlay(data):
     
     def draw_safe_string(x, y, text, max_w):
         # คำนวณความยาวจริง (นับเฉพาะตัวที่กินพื้นที่)
-        while text and pdfmetrics.stringWidth(text, 'THSarabunNew', 11.0) > max_w:
+        while text and pdfmetrics.stringWidth(text, 'THSarabunNew', 10.0) > max_w:
             text = text[:-1]
         can.drawString(x, y, text)
 
     if val_43:
-        draw_safe_string(special_x, special_y_43, val_43, 595 - special_x - 30)
+        draw_safe_string(special_x, special_y_43, val_43, 595 - special_x - 20)
     if val_44:
-        draw_safe_string(special_x, special_y_44, val_44, 595 - special_x - 30)
+        draw_safe_string(special_x, special_y_44, val_44, 595 - special_x - 20)
     
     can.save()
     packet.seek(0)
