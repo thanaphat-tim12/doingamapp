@@ -82,7 +82,7 @@ def create_pdf_overlay(data):
         # name_x = 275  # ปรับตัวเลขนี้เพื่อขยับชื่อ
         # shop_x = 230  # ปรับตัวเลขนี้เพื่อขยับชื่อร้าน
     elif val_43 and val_44:
-        template_file = "template 4.2.pdf"
+        template_file = "template4.2.pdf"
         y1, y2, y3, y4 = 638, 612, 592, 573
         y5, y6, y7, y8 = 549, 529, 512, 492
         y9, y10, y11, y12 = 468, 450, 220, 195
