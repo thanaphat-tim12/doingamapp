@@ -773,12 +773,12 @@ elif menu == "ค้นหา/จัดการข้อมูล":
             except:
                 fields = df.columns.tolist()
             
-            # คำนวณลำดับถัดไป (อิงตามข้อมูลที่โหลดมาล่าสุด)
+            # คำนวณลำดับถัดไป (อิงตามข้อมูลเต็มของชีตเป้าหมาย ไม่โดน Filter)
             next_seq = "1"
-            if 'ลำดับ' in fields:
+            full_df = load_sheet_data(target_add_sheet)
+            if not full_df.empty and 'ลำดับ' in full_df.columns:
                 try:
-                    # พยายามหาลำดับสูงสุดจากข้อมูลที่แสดงอยู่
-                    seqs = pd.to_numeric(df['ลำดับ'], errors='coerce').dropna()
+                    seqs = pd.to_numeric(full_df['ลำดับ'], errors='coerce').dropna()
                     if not seqs.empty:
                         next_seq = str(int(seqs.max()) + 1)
                 except: pass
