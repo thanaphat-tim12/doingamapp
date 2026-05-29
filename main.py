@@ -53,7 +53,7 @@ def create_pdf_overlay(data):
     # 1. กำหนดค่าเริ่มต้น (Default) สำหรับทุก Template
     # ปรับพิกัด V.6 (ดีดขึ้น 1 บรรทัดจาก V.5)
     y_offset = 5.5
-    name_x = 275
+    name_x = 325
     cid_x = 165
     shop_x = 230
     receipt_y_diff = 396.0 # ปรับให้ตรงบรรทัดใบเสร็จ (Y=445)
