@@ -34,6 +34,12 @@ def format_cid(cid):
     return cid
 
 def create_pdf_overlay(data):
+    # แปลงตัวเลขทั้งหมดใน data ให้เป็นตัวเลขไทย
+    def to_thai_numerals(v):
+        if v is None: return ""
+        return str(v).translate(str.maketrans("0123456789", "๐๑๒๓๔๕๖๗๘๙"))
+    data = {k: to_thai_numerals(v) for k, v in data.items()}
+
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
     can.setFont('THSarabunNew', 10.0)
@@ -183,6 +189,12 @@ def create_pdf_overlay(data):
     return output_stream
 
 def create_app_pdf_overlay(data):
+    # แปลงตัวเลขทั้งหมดใน data ให้เป็นตัวเลขไทย
+    def to_thai_numerals(v):
+        if v is None: return ""
+        return str(v).translate(str.maketrans("0123456789", "๐๑๒๓๔๕๖๗๘๙"))
+    data = {k: to_thai_numerals(v) for k, v in data.items()}
+
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=(595.27, 841.89)) # A4 size
     can.setFont('THSarabun', 10.0)
