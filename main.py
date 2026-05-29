@@ -95,9 +95,9 @@ def create_pdf_overlay(data):
     # 3. เริ่มการวาดข้อความโดยใช้พิกัดที่ถูกกำหนดด้านบน (Direct Grid Lock)
 
     # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
-    can.drawString(90, y1, str(data.get('p_license_book', '')))
-    can.drawString(155, y1, str(data.get('p_license_no', '')))
-    can.drawString(210, y1, str(data.get('p_license_year', '')))
+    can.drawString(110, y1, str(data.get('p_license_book', '')))
+    can.drawString(175, y1, str(data.get('p_license_no', '')))
+    can.drawString(230, y1, str(data.get('p_license_year', '')))
     
     # วาดบรรทัดที่ 2: ชื่อ / สัญชาติ
     can.drawString(name_x, y2, str(data.get('p_name', '')))
