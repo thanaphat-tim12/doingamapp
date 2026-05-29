@@ -101,7 +101,7 @@ def create_pdf_overlay(data):
     
     # วาดบรรทัดที่ 2: ชื่อ / สัญชาติ
     can.drawString(name_x, y2, str(data.get('p_name', '')))
-    can.drawString(535, y2, str(data.get('p_nationality', '')))
+    can.drawString(515, y2, str(data.get('p_nationality', '')))
     
     # วาดบรรทัดที่ 3: ที่อยู่เจ้าของ
     can.drawString(125, y3, str(data.get('p_addr', '')))
