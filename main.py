@@ -192,6 +192,7 @@ def create_app_pdf_overlay(data):
     # แปลงตัวเลขทั้งหมดใน data ให้เป็นตัวเลขไทย
     def to_thai_numerals(v):
         if v is None: return ""
+        if isinstance(v, bool): return v
         return str(v).translate(str.maketrans("0123456789", "๐๑๒๓๔๕๖๗๘๙"))
     data = {k: to_thai_numerals(v) for k, v in data.items()}
 
