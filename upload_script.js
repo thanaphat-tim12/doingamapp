@@ -55,8 +55,14 @@ function doPost(e) {
       sheet.getRange(1, colIdx).setValue("ไฟล์");
     }
     
-    // Set the file URL in the sheet
-    sheet.getRange(rowIdx, colIdx).setValue(fileUrl);
+    // Set the file URL in the sheet (append if exists)
+    var cellRange = sheet.getRange(rowIdx, colIdx);
+    var existingValue = cellRange.getValue().toString().trim();
+    if (existingValue) {
+      cellRange.setValue(existingValue + "\n" + fileUrl);
+    } else {
+      cellRange.setValue(fileUrl);
+    }
     
     return ContentService.createTextOutput(JSON.stringify({
       "status": "success",

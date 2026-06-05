@@ -995,12 +995,18 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                             c1, c2, c3, c4 = st.columns([1.5, 1.5, 1.5, 5])
                             if c1.button("🔄 ต่ออายุ", key=f"ed_{index}", use_container_width=True): st.session_state[f"m_{index}"] = "edit"
                             if c2.button("📜 พิมพ์ใบอนุญาต", key=f"pr_{index}", use_container_width=True): st.session_state[f"m_{index}"] = "print"
-                            uploaded_file = c3.file_uploader("📁 สแกน", key=f"up_{index}", label_visibility="collapsed")
-                            if uploaded_file:
+                            uploaded_files = c3.file_uploader("📁 สแกน", key=f"up_{index}", label_visibility="collapsed", accept_multiple_files=True)
+                            if uploaded_files:
                                 if st.button("📤 อัปโหลด", key=f"btn_up_{index}", use_container_width=True):
                                     # แถวใน Sheet คือ index + 2
                                     sheet_row = int(index) + 2
-                                    if upload_to_gdrive(uploaded_file, person_name, sheet_row, target_sheet):
+                                    success = True
+                                    for f in uploaded_files:
+                                        if not upload_to_gdrive(f, person_name, sheet_row, target_sheet):
+                                            success = False
+                                    if success:
+                                        st.success("✅ อัปโหลดไฟล์ทั้งหมดสำเร็จ!")
+                                        time.sleep(1)
                                         st.cache_data.clear()
                                         st.rerun()
                             
