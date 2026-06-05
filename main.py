@@ -514,7 +514,7 @@ def load_data(sheet_name=None):
             'attachment': find_col(['ไฟล์', 'ไฟล์แนบ', 'เอกสารแนบ', 'attachments'], 'ไฟล์')
         }
         if mapping['expire'] in df.columns:
-            df[mapping['expire']] = pd.to_datetime(df[mapping['expire']], dayfirst=True, errors='coerce')
+            df[mapping['expire']] = pd.to_datetime(df[mapping['expire']], dayfirst=True, errors='coerce', format='mixed')
             df[mapping['expire']] = df[mapping['expire']].apply(
                 lambda x: x.replace(year=x.year - 543) if pd.notnull(x) and x.year > 2500 else x
             )
@@ -640,7 +640,7 @@ if menu == "หน้าแรก (Dashboard)":
         if cols['expire'] in f_df.columns:
             # แปลงวันที่ถ้ายังไม่ได้แปลง
             if not pd.api.types.is_datetime64_any_dtype(f_df[cols['expire']]):
-                f_df[cols['expire']] = pd.to_datetime(f_df[cols['expire']], format='%d/%m/%Y', errors='coerce')
+                f_df[cols['expire']] = pd.to_datetime(f_df[cols['expire']], dayfirst=True, errors='coerce', format='mixed')
                 
             today = datetime.now()
             near_date = today + timedelta(days=90)
@@ -695,7 +695,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
         if cols['expire'] in f_df.columns:
             # แปลงวันที่ถ้ายังไม่ได้แปลง
             if not pd.api.types.is_datetime64_any_dtype(f_df[cols['expire']]):
-                f_df[cols['expire']] = pd.to_datetime(f_df[cols['expire']], format='%d/%m/%Y', errors='coerce')
+                f_df[cols['expire']] = pd.to_datetime(f_df[cols['expire']], dayfirst=True, errors='coerce', format='mixed')
                 
             today = datetime.now()
             near_date = today + timedelta(days=90)
