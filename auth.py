@@ -184,11 +184,15 @@ def check_login():
                             st.error("ไม่พบชื่อผู้ใช้งานนี้")
                             
         with tab2:
+            if st.session_state.get("reg_success"):
+                st.success("ลงทะเบียนสำเร็จ! กรุณารอผู้ดูแลระบบอนุมัติบัญชีของคุณ")
+                del st.session_state["reg_success"]
+
             with st.form("register_form"):
-                new_username = st.text_input("ชื่อผู้ใช้ (Username)")
-                new_password = st.text_input("รหัสผ่าน (Password)", type="password")
-                new_name = st.text_input("ชื่อ-นามสกุล (Full Name)")
-                new_position = st.text_input("ตำแหน่ง (Position)", placeholder="เช่น นักวิชาการสาธารณสุข")
+                new_username = st.text_input("ชื่อผู้ใช้ (Username)", key="reg_username")
+                new_password = st.text_input("รหัสผ่าน (Password)", type="password", key="reg_password")
+                new_name = st.text_input("ชื่อ-นามสกุล (Full Name)", key="reg_name")
+                new_position = st.text_input("ตำแหน่ง (Position)", placeholder="เช่น นักวิชาการสาธารณสุข", key="reg_position")
                 
                 reg_submit = st.form_submit_button("ลงทะเบียน", use_container_width=True)
                 
@@ -209,7 +213,13 @@ def check_login():
                                     "role": "staff",
                                     "status": "pending"
                                 })
-                                st.success("ลงทะเบียนสำเร็จ! กรุณารอผู้ดูแลระบบอนุมัติบัญชีของคุณ")
+                                # ล้างค่าในอินพุตหลังจากลงทะเบียนสำเร็จ
+                                st.session_state["reg_username"] = ""
+                                st.session_state["reg_password"] = ""
+                                st.session_state["reg_name"] = ""
+                                st.session_state["reg_position"] = ""
+                                st.session_state["reg_success"] = True
+                                st.rerun()
                             except Exception as e:
                                 st.error(f"เกิดข้อผิดพลาด: {e}")
                                 
