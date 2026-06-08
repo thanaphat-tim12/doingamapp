@@ -293,8 +293,20 @@ def create_docx_document(data):
                     is_empty = not val or str(val).strip() in ["", "-", "None"]
                     
                     if is_empty:
-                        # ถ้าในบรรทัดนั้นมีจุดไข่ปลาอยู่แล้ว (มี .. คั่น) ไม่ต้องใส่จุดเพิ่ม
-                        if ".." in paragraph.text:
+                        # ตรวจสอบว่ารอบๆ placeholder มีจุดไข่ปลาอยู่แล้วหรือไม่
+                        # โดยตรวจสอบข้อความ 3 ตัวอักษรก่อนหน้า และ 3 ตัวอักษรถัดไป
+                        has_dots = False
+                        parts = paragraph.text.split(placeholder)
+                        for i in range(len(parts) - 1):
+                            before = parts[i]
+                            after = parts[i+1]
+                            before_dots = "." in before[-3:] if len(before) > 0 else False
+                            after_dots = "." in after[:3] if len(after) > 0 else False
+                            if before_dots or after_dots:
+                                has_dots = True
+                                break
+
+                        if has_dots:
                             replacement_val = ""
                         else:
                             # ถ้าไม่มีจุดเลย ให้ใส่จุดไข่ปลาคั่น
