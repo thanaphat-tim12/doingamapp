@@ -11,6 +11,7 @@ import requests
 import base64
 from docx import Document
 import zipfile
+import re
 
 # PDF generation libraries
 from reportlab.pdfgen import canvas
@@ -294,7 +295,6 @@ def create_docx_document(data):
                     
                     if is_empty:
                         # ตรวจสอบว่ารอบๆ placeholder มีจุดไข่ปลาอยู่แล้วหรือไม่
-                        # โดยตรวจสอบข้อความ 3 ตัวอักษรก่อนหน้า และ 3 ตัวอักษรถัดไป
                         has_dots = False
                         parts = paragraph.text.split(placeholder)
                         for i in range(len(parts) - 1):
@@ -308,6 +308,7 @@ def create_docx_document(data):
 
                         if has_dots:
                             replacement_val = ""
+                            pattern = re.escape(placeholder)
                         else:
                             # ถ้าไม่มีจุดเลย ให้ใส่จุดไข่ปลาคั่น
                             if key in ["p_name", "p_shop", "p_type", "p_fee_text", "p_rcpt_book"]:
@@ -316,14 +317,17 @@ def create_docx_document(data):
                                 replacement_val = "............"
                             else:
                                 replacement_val = "............................"
+                            pattern = re.escape(placeholder)
                     else:
                         replacement_val = str(val)
+                        # หากมีข้อมูลจริง ให้กวาดล้างจุดไข่ปลาที่ขนาบข้าง placeholder ออกไป (เพื่อไม่ให้จุดโผล่ซ้ำ)
+                        pattern = rf"\.*{re.escape(placeholder)}\.*"
 
                     # 1. แทนที่ในระดับ run โดยตรง
                     replaced = False
                     for run in paragraph.runs:
                         if placeholder in run.text:
-                            run.text = run.text.replace(placeholder, replacement_val)
+                            run.text = re.sub(pattern, replacement_val, run.text)
                             replaced = True
                     
                     # 2. ถ้ารันถูกตัดแบ่ง (Word split runs) ให้รวมรันทั้งหมดเข้าด้วยกัน
@@ -331,7 +335,7 @@ def create_docx_document(data):
                         if len(paragraph.runs) > 0:
                             first_run = paragraph.runs[0]
                             full_text = "".join([r.text for r in paragraph.runs])
-                            full_text = full_text.replace(placeholder, replacement_val)
+                            full_text = re.sub(pattern, replacement_val, full_text)
                             first_run.text = full_text
                             for r in paragraph.runs[1:]:
                                 r.text = ""
