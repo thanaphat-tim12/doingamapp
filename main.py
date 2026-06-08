@@ -196,7 +196,66 @@ def create_docx_document(data):
     def to_thai_numerals(v):
         if v is None: return ""
         return str(v).translate(str.maketrans("0123456789", "๐๑๒๓๔๕๖๗๘๙"))
-        
+
+    def replace_pattern_in_runs(runs, pattern, replacement):
+        run_texts = [r.text for r in runs]
+        full_text = "".join(run_texts)
+        import re
+        matches = list(re.finditer(pattern, full_text))
+        if not matches:
+            return False
+        for match in reversed(matches):
+            start_char, end_char = match.span()
+            char_map = []
+            for r_idx, r_text in enumerate(run_texts):
+                for c_idx in range(len(r_text)):
+                    char_map.append((r_idx, c_idx))
+            if not char_map:
+                continue
+            start_run_idx, start_run_char = char_map[start_char]
+            if end_char - 1 < len(char_map):
+                end_run_idx, end_run_char = char_map[end_char - 1]
+            else:
+                end_run_idx, end_run_char = char_map[-1]
+            if start_run_idx == end_run_idx:
+                r = runs[start_run_idx]
+                run_text_list = list(r.text)
+                run_text_list[start_run_char : start_run_char + (end_char - start_char)] = list(replacement)
+                r.text = "".join(run_text_list)
+            else:
+                r_start = runs[start_run_idx]
+                start_text = r_start.text[:start_run_char] + replacement
+                r_start.text = start_text
+                for idx in range(start_run_idx + 1, end_run_idx):
+                    runs[idx].text = ""
+                r_end = runs[end_run_idx]
+                end_text = r_end.text[end_run_char + 1:]
+                r_end.text = end_text
+            run_texts = [r.text for r in runs]
+        return True
+
+    def trim_dots_from_runs(runs, to_remove):
+        import re
+        for run in reversed(runs):
+            if to_remove <= 0:
+                break
+            text = run.text
+            if not text:
+                continue
+            matches = list(re.finditer(r'\.{3,}', text))
+            if not matches:
+                continue
+            new_text = list(text)
+            for match in reversed(matches):
+                span_start, span_end = match.span()
+                span_len = span_end - span_start
+                rem = min(to_remove, span_len)
+                del new_text[span_end - rem : span_end]
+                to_remove -= rem
+                if to_remove <= 0:
+                    break
+            run.text = "".join(new_text)
+
     raw_data = {k: to_thai_numerals(v) for k, v in data.items()}
 
     # ดึงค่าเงื่อนไขมาเช็คเพื่อเลือก Template
@@ -287,6 +346,9 @@ def create_docx_document(data):
                 p_element.getparent().remove(p_element)
                 continue
 
+            orig_len = len(paragraph.text)
+            has_changes = False
+
             for key, val in mapped_data.items():
                 placeholder = f"{{{{{key}}}}}"
                 if placeholder in paragraph.text:
@@ -323,22 +385,14 @@ def create_docx_document(data):
                         # หากมีข้อมูลจริง ให้กวาดล้างจุดไข่ปลาที่ขนาบข้าง placeholder ออกไป (เพื่อไม่ให้จุดโผล่ซ้ำ)
                         pattern = rf"\.*{re.escape(placeholder)}\.*"
 
-                    # 1. แทนที่ในระดับ run โดยตรง
-                    replaced = False
-                    for run in paragraph.runs:
-                        if placeholder in run.text:
-                            run.text = re.sub(pattern, replacement_val, run.text)
-                            replaced = True
-                    
-                    # 2. ถ้ารันถูกตัดแบ่ง (Word split runs) ให้รวมรันทั้งหมดเข้าด้วยกัน
-                    if not replaced:
-                        if len(paragraph.runs) > 0:
-                            first_run = paragraph.runs[0]
-                            full_text = "".join([r.text for r in paragraph.runs])
-                            full_text = re.sub(pattern, replacement_val, full_text)
-                            first_run.text = full_text
-                            for r in paragraph.runs[1:]:
-                                r.text = ""
+                    if replace_pattern_in_runs(paragraph.runs, pattern, replacement_val):
+                        has_changes = True
+
+            if has_changes:
+                new_len = len(paragraph.text)
+                diff_len = new_len - orig_len
+                if diff_len > 0:
+                    trim_dots_from_runs(paragraph.runs, diff_len)
 
     replace_placeholders(doc.paragraphs)
     for table in doc.tables:
@@ -1086,8 +1140,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         "p_addr": str(row_item.get(cols['address'], '')),
                                         "p_moo": str(row_item.get(cols['moo'], '')),
                                         "p_tumbon": "ดอยงาม",
-                                        "p_amphoe": "อ.พาน",
-                                        "p_province": "จ.เชียงราย",
+                                        "p_amphoe": "พาน",
+                                        "p_province": "เชียงราย",
                                         "p_cid": str(row_item.get(cols['cid'], '')),
                                         "p_phone": str(row_item.get(cols.get('phone', 'โทรศัพท์'), '')),
                                         "p_shop": str(row_item.get(cols['shop'], '')),
@@ -1231,8 +1285,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         
                                         c_addr_o1, c_addr_o2, c_addr_o3 = st.columns(3)
                                         p_tumbon = c_addr_o1.text_input("ตำบล", value="ดอยงาม", key=f"p_t_{index}")
-                                        p_amphoe = c_addr_o2.text_input("อำเภอ", value="อ.พาน", key=f"p_a_{index}")
-                                        p_province = c_addr_o3.text_input("จังหวัด", value="จ.เชียงราย", key=f"p_p_{index}")
+                                        p_amphoe = c_addr_o2.text_input("อำเภอ", value="พาน", key=f"p_a_{index}")
+                                        p_province = c_addr_o3.text_input("จังหวัด", value="เชียงราย", key=f"p_p_{index}")
                                         
                                         st.markdown("---")
                                         st.markdown("**ข้อมูลสถานประกอบการ**")
@@ -1246,8 +1300,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         
                                         c_addr_s1, c_addr_s2, c_addr_s3 = st.columns(3)
                                         p_shop_tumbon = c_addr_s1.text_input("ตำบล (ร้าน)", value="ดอยงาม", key=f"p_s_t_{index}")
-                                        p_shop_amphoe = c_addr_s2.text_input("อำเภอ (ร้าน)", value="อ.พาน", key=f"p_s_a_{index}")
-                                        p_shop_province = c_addr_s3.text_input("จังหวัด (ร้าน)", value="จ.เชียงราย", key=f"p_s_p_{index}")
+                                        p_shop_amphoe = c_addr_s2.text_input("อำเภอ (ร้าน)", value="พาน", key=f"p_s_a_{index}")
+                                        p_shop_province = c_addr_s3.text_input("จังหวัด (ร้าน)", value="เชียงราย", key=f"p_s_p_{index}")
                                         
                                         p_phone = col_s2.text_input("โทรศัพท์ (ร้าน)", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"p_s_phone_{index}")
                                         
