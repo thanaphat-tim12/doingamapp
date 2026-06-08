@@ -219,51 +219,45 @@ def create_docx_document(data):
         else:
             rcpt_combined = rcpt_no
 
-    # ฟังก์ชันช่วยจัดการเมื่อเว้นว่าง ให้แสดงเป็นจุดไข่ปลาแทนการปล่อยว่างโล่งๆ (ป้องกันหน้าเบี้ยว/ตัวหนังสือติดกัน)
-    def get_val(val, default_dots="............................"):
-        if not val or str(val).strip() in ["", "-", "None"]:
-            return default_dots
-        return val
-
     mapped_data = {
-        "p_license_book": get_val(raw_data.get("p_license_book", ""), "................"),
-        "p_license_no": get_val(raw_data.get("p_license_no", ""), "................"),
-        "p_license_year": get_val(raw_data.get("p_license_year", ""), "................"),
-        "p_name": get_val(raw_data.get("p_name", ""), "................................................"),
-        "p_nationality": get_val(raw_data.get("p_nationality", ""), "................"),
-        "p_addr": get_val(raw_data.get("p_addr", ""), "................"),
-        "p_moo": get_val(raw_data.get("p_moo", ""), "................"),
-        "p_tumbon": get_val(raw_data.get("p_tumbon", ""), "............................"),
-        "p_amphoe": get_val(raw_data.get("p_amphoe", ""), "............................"),
-        "p_province": get_val(raw_data.get("p_province", ""), "............................"),
-        "p_cid": get_val(raw_data.get("p_cid", ""), "........................................"),
-        "p_phone": get_val(raw_data.get("p_phone", ""), "................................"),
-        "p_shop": get_val(raw_data.get("p_shop", ""), "................................................"),
-        "p_type": get_val(raw_data.get("p_type", ""), "................................................"),
+        "p_license_book": raw_data.get("p_license_book", ""),
+        "p_license_no": raw_data.get("p_license_no", ""),
+        "p_license_year": raw_data.get("p_license_year", ""),
+        "p_name": raw_data.get("p_name", ""),
+        "p_nationality": raw_data.get("p_nationality", ""),
+        "p_addr": raw_data.get("p_addr", ""),
+        "p_moo": raw_data.get("p_moo", ""),
+        "p_tumbon": raw_data.get("p_tumbon", ""),
+        "p_amphoe": raw_data.get("p_amphoe", ""),
+        "p_province": raw_data.get("p_province", ""),
+        "p_cid": raw_data.get("p_cid", ""),
+        "p_phone": raw_data.get("p_phone", ""),
+        "p_shop": raw_data.get("p_shop", ""),
+        "p_type": raw_data.get("p_type", ""),
         
         # ที่อยู่ร้าน
-        "p_shopaddr": get_val(raw_data.get("p_shop_addr", raw_data.get("p_addr", "")), "................"),
-        "p_shop_m": get_val(raw_data.get("p_shop_moo", raw_data.get("p_moo", "")), "................"),
-        "p_shop_t": get_val(raw_data.get("p_shop_tumbon", raw_data.get("p_tumbon", "")), "............................"),
-        "p_shop_a": get_val(raw_data.get("p_shop_amphoe", raw_data.get("p_amphoe", "")), "............................"),
-        "p_shop_p": get_val(raw_data.get("p_shop_province", raw_data.get("p_province", "")), "............................"),
-        "p_shop_phone": get_val(raw_data.get("p_shop_phone", raw_data.get("p_phone", "")), "................................"),
+        "p_shopaddr": raw_data.get("p_shop_addr", raw_data.get("p_addr", "")),
+        "p_shop_m": raw_data.get("p_shop_moo", raw_data.get("p_moo", "")),
+        "p_shop_t": raw_data.get("p_shop_tumbon", raw_data.get("p_tumbon", "")),
+        "p_shop_a": raw_data.get("p_shop_amphoe", raw_data.get("p_amphoe", "")),
+        "p_shop_p": raw_data.get("p_shop_province", raw_data.get("p_province", "")),
+        "p_shop_phone": raw_data.get("p_shop_phone", raw_data.get("p_phone", "")),
         
         # ค่าธรรมเนียม & ใบเสร็จ
-        "p_fee": get_val(raw_data.get("p_fee", ""), "................"),
-        "p_fee_text": get_val(raw_data.get("p_fee_text", ""), "................................................"),
-        "p_rcpt_book": get_val(rcpt_combined, "................................................"),
-        "p_rcpt_date": get_val(raw_data.get("p_rcpt_date", ""), "................................"),
+        "p_fee": raw_data.get("p_fee", ""),
+        "p_fee_text": raw_data.get("p_fee_text", ""),
+        "p_rcpt_book": rcpt_combined,
+        "p_rcpt_date": raw_data.get("p_rcpt_date", ""),
         
         # วันออกใบอนุญาต (issue)
-        "d": get_val(raw_data.get("issue_day", ""), "................"),
-        "m": get_val(raw_data.get("issue_month", ""), "................................"),
-        "y": get_val(raw_data.get("issue_year", ""), "................"),
+        "d": raw_data.get("issue_day", ""),
+        "m": raw_data.get("issue_month", ""),
+        "y": raw_data.get("issue_year", ""),
         
         # วันหมดอายุ (expire)
-        "d2": get_val(raw_data.get("expire_day", ""), "................"),
-        "m2": get_val(raw_data.get("expire_month", ""), "................................"),
-        "y2": get_val(raw_data.get("expire_year", ""), "................"),
+        "d2": raw_data.get("expire_day", ""),
+        "m2": raw_data.get("expire_month", ""),
+        "y2": raw_data.get("expire_year", ""),
         
         # เงื่อนไข
         "p_43": val_43,
@@ -295,11 +289,29 @@ def create_docx_document(data):
             for key, val in mapped_data.items():
                 placeholder = f"{{{{{key}}}}}"
                 if placeholder in paragraph.text:
+                    # ตรวจสอบความว่างเปล่า
+                    is_empty = not val or str(val).strip() in ["", "-", "None"]
+                    
+                    if is_empty:
+                        # ถ้าในบรรทัดนั้นมีจุดไข่ปลาอยู่แล้ว (มี .. คั่น) ไม่ต้องใส่จุดเพิ่ม
+                        if ".." in paragraph.text:
+                            replacement_val = ""
+                        else:
+                            # ถ้าไม่มีจุดเลย ให้ใส่จุดไข่ปลาคั่น
+                            if key in ["p_name", "p_shop", "p_type", "p_fee_text", "p_rcpt_book"]:
+                                replacement_val = "................................................"
+                            elif key in ["p_moo", "p_shop_m", "d", "d2", "m", "m2", "y", "y2", "p_nationality", "p_license_book", "p_license_no", "p_license_year", "p_addr", "p_shopaddr"]:
+                                replacement_val = "............"
+                            else:
+                                replacement_val = "............................"
+                    else:
+                        replacement_val = str(val)
+
                     # 1. แทนที่ในระดับ run โดยตรง
                     replaced = False
                     for run in paragraph.runs:
                         if placeholder in run.text:
-                            run.text = run.text.replace(placeholder, str(val))
+                            run.text = run.text.replace(placeholder, replacement_val)
                             replaced = True
                     
                     # 2. ถ้ารันถูกตัดแบ่ง (Word split runs) ให้รวมรันทั้งหมดเข้าด้วยกัน
@@ -307,7 +319,7 @@ def create_docx_document(data):
                         if len(paragraph.runs) > 0:
                             first_run = paragraph.runs[0]
                             full_text = "".join([r.text for r in paragraph.runs])
-                            full_text = full_text.replace(placeholder, str(val))
+                            full_text = full_text.replace(placeholder, replacement_val)
                             first_run.text = full_text
                             for r in paragraph.runs[1:]:
                                 r.text = ""
