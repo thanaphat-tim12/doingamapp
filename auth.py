@@ -185,6 +185,11 @@ def check_login():
                             
         with tab2:
             if st.session_state.get("reg_success"):
+                # ล้างค่าในอินพุตหลังจากลงทะเบียนสำเร็จ (ทำก่อน Widget ถูกสร้างเพื่อไม่ให้เกิด Error)
+                st.session_state["reg_username"] = ""
+                st.session_state["reg_password"] = ""
+                st.session_state["reg_name"] = ""
+                st.session_state["reg_position"] = ""
                 st.success("ลงทะเบียนสำเร็จ! กรุณารอผู้ดูแลระบบอนุมัติบัญชีของคุณ")
                 del st.session_state["reg_success"]
 
@@ -213,11 +218,7 @@ def check_login():
                                     "role": "staff",
                                     "status": "pending"
                                 })
-                                # ล้างค่าในอินพุตหลังจากลงทะเบียนสำเร็จ
-                                st.session_state["reg_username"] = ""
-                                st.session_state["reg_password"] = ""
-                                st.session_state["reg_name"] = ""
-                                st.session_state["reg_position"] = ""
+                                # ตั้งสถานะว่าลงทะเบียนสำเร็จแล้วและสั่ง rerun เพื่อกลับไปล้างช่องข้อมูลด้านบน
                                 st.session_state["reg_success"] = True
                                 st.rerun()
                             except Exception as e:
