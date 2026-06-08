@@ -479,6 +479,7 @@ def create_app_pdf_overlay(data):
 SERVICE_ACCOUNT_FILE = 'credentials.json' 
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1t_xTI0RvXTUsUAJOvqgs1RFKsDK5f5qPCOPOvIqeMrw/edit"
 GAS_URL = "https://script.google.com/macros/s/AKfycbxZ3Q1mk0hN69bmxctlOR95yKYC6hMP2BwaTXQn9WaX5edP09nUAKKv20N_kX-KzJg/exec"
+@st.cache_resource
 def get_gspread_client():
     try:
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
