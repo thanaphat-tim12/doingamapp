@@ -1085,9 +1085,9 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         "p_nationality": "ไทย",
                                         "p_addr": str(row_item.get(cols['address'], '')),
                                         "p_moo": str(row_item.get(cols['moo'], '')),
-                                        "p_tumbon": "",
-                                        "p_amphoe": "",
-                                        "p_province": "",
+                                        "p_tumbon": "ดอยงาม",
+                                        "p_amphoe": "อ.พาน",
+                                        "p_province": "จ.เชียงราย",
                                         "p_cid": str(row_item.get(cols['cid'], '')),
                                         "p_phone": str(row_item.get(cols.get('phone', 'โทรศัพท์'), '')),
                                         "p_shop": str(row_item.get(cols['shop'], '')),
@@ -1230,9 +1230,9 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_moo = col_f2.text_input("หมู่ที่", value=row.get(cols['moo'], ''), key=f"p_moo_{index}")
                                         
                                         c_addr_o1, c_addr_o2, c_addr_o3 = st.columns(3)
-                                        p_tumbon = c_addr_o1.text_input("ตำบล", value="", key=f"p_t_{index}")
-                                        p_amphoe = c_addr_o2.text_input("อำเภอ", value="", key=f"p_a_{index}")
-                                        p_province = c_addr_o3.text_input("จังหวัด", value="", key=f"p_p_{index}")
+                                        p_tumbon = c_addr_o1.text_input("ตำบล", value="ดอยงาม", key=f"p_t_{index}")
+                                        p_amphoe = c_addr_o2.text_input("อำเภอ", value="อ.พาน", key=f"p_a_{index}")
+                                        p_province = c_addr_o3.text_input("จังหวัด", value="จ.เชียงราย", key=f"p_p_{index}")
                                         
                                         st.markdown("---")
                                         st.markdown("**ข้อมูลสถานประกอบการ**")
@@ -1245,9 +1245,9 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_shop_moo = col_s2.text_input("หมู่ที่ (สถานประกอบการ)", value=row.get(cols['moo'], ''), key=f"p_s_moo_{index}")
                                         
                                         c_addr_s1, c_addr_s2, c_addr_s3 = st.columns(3)
-                                        p_shop_tumbon = c_addr_s1.text_input("ตำบล (ร้าน)", value="", key=f"p_s_t_{index}")
-                                        p_shop_amphoe = c_addr_s2.text_input("อำเภอ (ร้าน)", value="", key=f"p_s_a_{index}")
-                                        p_shop_province = c_addr_s3.text_input("จังหวัด (ร้าน)", value="", key=f"p_s_p_{index}")
+                                        p_shop_tumbon = c_addr_s1.text_input("ตำบล (ร้าน)", value="ดอยงาม", key=f"p_s_t_{index}")
+                                        p_shop_amphoe = c_addr_s2.text_input("อำเภอ (ร้าน)", value="อ.พาน", key=f"p_s_a_{index}")
+                                        p_shop_province = c_addr_s3.text_input("จังหวัด (ร้าน)", value="จ.เชียงราย", key=f"p_s_p_{index}")
                                         
                                         p_phone = col_s2.text_input("โทรศัพท์ (ร้าน)", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"p_s_phone_{index}")
                                         
