@@ -9,6 +9,8 @@ import streamlit.components.v1 as components
 import time
 import requests
 import base64
+from docx import Document
+import zipfile
 
 # PDF generation libraries
 from reportlab.pdfgen import canvas
@@ -185,6 +187,115 @@ def create_pdf_overlay(data):
     
     output_stream = io.BytesIO()
     output.write(output_stream)
+    output_stream.seek(0)
+    return output_stream
+
+def create_docx_document(data):
+    # แปลงตัวเลขทั้งหมดใน data ให้เป็นตัวเลขไทย
+    def to_thai_numerals(v):
+        if v is None: return ""
+        return str(v).translate(str.maketrans("0123456789", "๐๑๒๓๔๕๖๗๘๙"))
+        
+    raw_data = {k: to_thai_numerals(v) for k, v in data.items()}
+
+    # ดึงค่าเงื่อนไขมาเช็คเพื่อเลือก Template
+    val_43 = str(data.get('p_43', '')).strip()
+    val_44 = str(data.get('p_44', '')).strip()
+
+    if val_43 and not val_44:
+        template_file = "template 3.docx"
+    elif val_43 and val_44:
+        template_file = "template 2.docx"
+    else:
+        template_file = "template 1.docx"
+
+    # ผสมเล่มและเลขที่ใบเสร็จ
+    rcpt_book = raw_data.get("p_rcpt_book", "")
+    rcpt_no = raw_data.get("p_rcpt_no", "")
+    rcpt_combined = rcpt_book
+    if rcpt_no and rcpt_no != "-":
+        if rcpt_book:
+            rcpt_combined += f" / {rcpt_no}"
+        else:
+            rcpt_combined = rcpt_no
+
+    mapped_data = {
+        "p_license_book": raw_data.get("p_license_book", ""),
+        "p_license_no": raw_data.get("p_license_no", ""),
+        "p_license_year": raw_data.get("p_license_year", ""),
+        "p_name": raw_data.get("p_name", ""),
+        "p_nationality": raw_data.get("p_nationality", ""),
+        "p_addr": raw_data.get("p_addr", ""),
+        "p_moo": raw_data.get("p_moo", ""),
+        "p_tumbon": raw_data.get("p_tumbon", ""),
+        "p_amphoe": raw_data.get("p_amphoe", ""),
+        "p_province": raw_data.get("p_province", ""),
+        "p_cid": raw_data.get("p_cid", ""),
+        "p_phone": raw_data.get("p_phone", ""),
+        "p_shop": raw_data.get("p_shop", ""),
+        "p_type": raw_data.get("p_type", ""),
+        
+        # ที่อยู่ร้าน
+        "p_shopaddr": raw_data.get("p_shop_addr", raw_data.get("p_addr", "")),
+        "p_shop_m": raw_data.get("p_shop_moo", raw_data.get("p_moo", "")),
+        "p_shop_t": raw_data.get("p_shop_tumbon", raw_data.get("p_tumbon", "")),
+        "p_shop_a": raw_data.get("p_shop_amphoe", raw_data.get("p_amphoe", "")),
+        "p_shop_p": raw_data.get("p_shop_province", raw_data.get("p_province", "")),
+        "p_shop_phone": raw_data.get("p_shop_phone", raw_data.get("p_phone", "")),
+        
+        # ค่าธรรมเนียม & ใบเสร็จ
+        "p_fee": raw_data.get("p_fee", ""),
+        "p_fee_text": raw_data.get("p_fee_text", ""),
+        "p_rcpt_book": rcpt_combined,
+        "p_rcpt_date": raw_data.get("p_rcpt_date", ""),
+        
+        # วันออกใบอนุญาต (issue)
+        "d": raw_data.get("issue_day", ""),
+        "m": raw_data.get("issue_month", ""),
+        "y": raw_data.get("issue_year", ""),
+        
+        # วันหมดอายุ (expire)
+        "d2": raw_data.get("expire_day", ""),
+        "m2": raw_data.get("expire_month", ""),
+        "y2": raw_data.get("expire_year", ""),
+        
+        # เงื่อนไข
+        "p_43": val_43,  # ใช้แบบเลขอารบิกดั้งเดิมตามหน้าจอ
+        "p_44": val_44,
+    }
+
+    doc = Document(template_file)
+
+    def replace_placeholders(paragraphs):
+        for paragraph in paragraphs:
+            for key, val in mapped_data.items():
+                placeholder = f"{{{{{key}}}}}"
+                if placeholder in paragraph.text:
+                    # 1. แทนที่ในระดับ run โดยตรง
+                    replaced = False
+                    for run in paragraph.runs:
+                        if placeholder in run.text:
+                            run.text = run.text.replace(placeholder, str(val))
+                            replaced = True
+                    
+                    # 2. ถ้ารันถูกตัดแบ่ง (Word split runs) ให้รวมรันทั้งหมดเข้าด้วยกัน
+                    if not replaced:
+                        if len(paragraph.runs) > 0:
+                            first_run = paragraph.runs[0]
+                            full_text = "".join([r.text for r in paragraph.runs])
+                            full_text = full_text.replace(placeholder, str(val))
+                            first_run.text = full_text
+                            for r in paragraph.runs[1:]:
+                                r.text = ""
+
+    replace_placeholders(doc.paragraphs)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                replace_placeholders(cell.paragraphs)
+
+    output_stream = io.BytesIO()
+    doc.save(output_stream)
     output_stream.seek(0)
     return output_stream
 
@@ -892,62 +1003,68 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                         st.session_state[f"do_print_all_{first_row.name}"] = True
                         
                     if st.session_state.get(f"do_print_all_{first_row.name}"):
-                        with st.spinner("กำลังสร้างไฟล์ PDF รวม..."):
+                        with st.spinner("กำลังสร้างไฟล์ Word..."):
                             thai_months = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]
-                            merger = PdfWriter()
-                            for idx, row_item in group_data.iterrows():
-                                old_exp = row_item.get(cols['expire'])
-                                if pd.notnull(old_exp) and isinstance(old_exp, (pd.Timestamp, datetime)):
-                                    try:
-                                        issue_date = old_exp.replace(year=datetime.now().year)
-                                    except ValueError:
-                                        issue_date = old_exp.replace(year=datetime.now().year, day=28)
-                                else:
-                                    issue_date = datetime.now()
-                                    
-                                try:
-                                    expire_date = issue_date.replace(year=issue_date.year + 1) - timedelta(days=1)
-                                except ValueError:
-                                    expire_date = issue_date + timedelta(days=364)
-                                
-                                rcpt_date = datetime.now()
-                                
-                                context = {
-                                    "p_license_book": "",
-                                    "p_license_no": "",
-                                    "p_license_year": str(datetime.now().year + 543),
-                                    "p_name": str(row_item.get(cols['name'], '')),
-                                    "p_nationality": "ไทย",
-                                    "p_addr": str(row_item.get(cols['address'], '')),
-                                    "p_moo": str(row_item.get(cols['moo'], '')),
-                                    "p_cid": str(row_item.get(cols['cid'], '')),
-                                    "p_phone": str(row_item.get(cols.get('phone', 'โทรศัพท์'), '')),
-                                    "p_shop": str(row_item.get(cols['shop'], '')),
-                                    "p_type": str(row_item.get(cols['type'], '')),
-                                    "p_fee": str(row_item.get(cols['fee'], '')),
-                                    "p_fee_text": "-",
-                                    "p_rcpt_book": str(row_item.get(cols['rcpt_book'], '')),
-                                    "p_rcpt_no": str(row_item.get(cols['rcpt_no'], '')),
-                                    "p_rcpt_date": f"{rcpt_date.day} {thai_months[rcpt_date.month]} {rcpt_date.year + 543}",
-                                    "issue_day": str(issue_date.day),
-                                    "issue_month": thai_months[issue_date.month],
-                                    "issue_year": str(issue_date.year + 543),
-                                    "expire_day": str(expire_date.day),
-                                    "expire_month": thai_months[expire_date.month],
-                                    "expire_year": str(expire_date.year + 543),
-                                }
-                                single_pdf = create_pdf_overlay(context)
-                                merger.append(PdfReader(single_pdf))
-                                
+                            
                             output_buffer = io.BytesIO()
-                            merger.write(output_buffer)
+                            with zipfile.ZipFile(output_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                                for idx, row_item in group_data.iterrows():
+                                    old_exp = row_item.get(cols['expire'])
+                                    if pd.notnull(old_exp) and isinstance(old_exp, (pd.Timestamp, datetime)):
+                                        try:
+                                            issue_date = old_exp.replace(year=datetime.now().year)
+                                        except ValueError:
+                                            issue_date = old_exp.replace(year=datetime.now().year, day=28)
+                                    else:
+                                        issue_date = datetime.now()
+                                        
+                                    try:
+                                        expire_date = issue_date.replace(year=issue_date.year + 1) - timedelta(days=1)
+                                    except ValueError:
+                                        expire_date = issue_date + timedelta(days=364)
+                                    
+                                    rcpt_date = datetime.now()
+                                    
+                                    context = {
+                                        "p_license_book": "",
+                                        "p_license_no": "",
+                                        "p_license_year": str(datetime.now().year + 543),
+                                        "p_name": str(row_item.get(cols['name'], '')),
+                                        "p_nationality": "ไทย",
+                                        "p_addr": str(row_item.get(cols['address'], '')),
+                                        "p_moo": str(row_item.get(cols['moo'], '')),
+                                        "p_tumbon": "",
+                                        "p_amphoe": "",
+                                        "p_province": "",
+                                        "p_cid": str(row_item.get(cols['cid'], '')),
+                                        "p_phone": str(row_item.get(cols.get('phone', 'โทรศัพท์'), '')),
+                                        "p_shop": str(row_item.get(cols['shop'], '')),
+                                        "p_type": str(row_item.get(cols['type'], '')),
+                                        "p_fee": str(row_item.get(cols['fee'], '')),
+                                        "p_fee_text": "-",
+                                        "p_rcpt_book": str(row_item.get(cols['rcpt_book'], '')),
+                                        "p_rcpt_no": str(row_item.get(cols['rcpt_no'], '')),
+                                        "p_rcpt_date": f"{rcpt_date.day} {thai_months[rcpt_date.month]} {rcpt_date.year + 543}",
+                                        "issue_day": str(issue_date.day),
+                                        "issue_month": thai_months[issue_date.month],
+                                        "issue_year": str(issue_date.year + 543),
+                                        "expire_day": str(expire_date.day),
+                                        "expire_month": thai_months[expire_date.month],
+                                        "expire_year": str(expire_date.year + 543),
+                                    }
+                                    docx_buf = create_docx_document(context)
+                                    clean_name = str(row_item.get(cols['name'], 'ผู้ประกอบการ')).replace('/', '_').replace('\\', '_')
+                                    clean_type = str(row_item.get(cols['type'], 'ใบอนุญาต')).replace('/', '_').replace('\\', '_')[:15]
+                                    file_name = f"ใบอนุญาต_{clean_name}_{clean_type}_{idx}.docx"
+                                    zip_file.writestr(file_name, docx_buf.getvalue())
+                                    
                             output_buffer.seek(0)
                             
                         st.download_button(
-                            label="📥 คลิกดาวน์โหลดไฟล์ PDF รวมทั้งหมด",
+                            label="📥 คลิกดาวน์โหลดไฟล์ Word ทั้งหมด (ZIP)",
                             data=output_buffer,
-                            file_name=f"ใบอนุญาต_รวม_{u_name}.pdf",
-                            mime="application/pdf",
+                            file_name=f"ใบอนุญาต_รวม_{u_name}.zip",
+                            mime="application/zip",
                             type="primary",
                             key=f"dl_all_{first_row.name}"
                         )
@@ -1170,17 +1287,17 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             "p_44": p_44,
                                         }
                                         try:
-                                            pdf_buffer = create_pdf_overlay(context)
+                                            docx_buffer = create_docx_document(context)
                                             st.download_button(
-                                                label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์ใบอนุญาต (PDF)",
-                                                data=pdf_buffer,
-                                                file_name=f"ใบอนุญาต_{p_name}.pdf",
-                                                mime="application/pdf",
+                                                label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์ใบอนุญาต (Word)",
+                                                data=docx_buffer,
+                                                file_name=f"ใบอนุญาต_{p_name}.docx",
+                                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                                 type="secondary"
                                             )
-                                            st.success("สร้างไฟล์ PDF พร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
+                                            st.success("สร้างไฟล์ Word พร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
                                         except Exception as e:
-                                            st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ PDF: {e}")
+                                            st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ Word: {e}")
                                             
                                     with tab2:
                                         st.subheader("จัดการข้อมูลและแก้ไขก่อนพิมพ์ (แบบคำขอ)")
