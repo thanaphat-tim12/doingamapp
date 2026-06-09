@@ -256,6 +256,23 @@ def create_docx_document(data):
                     break
             run.text = "".join(new_text)
 
+    def trim_trailing_tabs_if_long(paragraph):
+        runs = paragraph.runs
+        if not runs:
+            return
+        trailing_run_indices = []
+        for i in range(len(runs) - 1, -1, -1):
+            text = runs[i].text
+            if text and any(c not in '\t ' for c in text):
+                break
+            trailing_run_indices.append(i)
+        if not trailing_run_indices:
+            return
+        non_trailing_text = "".join([runs[i].text for i in range(len(runs)) if i not in trailing_run_indices])
+        if len(non_trailing_text) >= 50:
+            for idx in trailing_run_indices:
+                runs[idx].text = ""
+
     raw_data = {k: to_thai_numerals(v) for k, v in data.items()}
 
     # ดึงค่าเงื่อนไขมาเช็คเพื่อเลือก Template
@@ -393,6 +410,8 @@ def create_docx_document(data):
                 diff_len = new_len - orig_len
                 if diff_len > 0:
                     trim_dots_from_runs(paragraph.runs, diff_len)
+
+            trim_trailing_tabs_if_long(paragraph)
 
     replace_placeholders(doc.paragraphs)
     for table in doc.tables:
