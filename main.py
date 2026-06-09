@@ -729,7 +729,9 @@ def load_data(sheet_name=None):
             'rcpt_book': find_col(['ใบเสร็จรับเงินเล่มที่', 'เล่มที่'], 'ใบเสร็จรับเงินเล่มที่'),
             'rcpt_no': find_col(['เลขที่', 'เลขที่ใบเสร็จ'], 'เลขที่'),
             'rcpt_date': find_col(['ลงวันที่', 'วันที่รับเงิน'], 'ลงวันที่'),
-            'attachment': find_col(['ไฟล์', 'ไฟล์แนบ', 'เอกสารแนบ', 'attachments'], 'ไฟล์')
+            'attachment': find_col(['ไฟล์', 'ไฟล์แนบ', 'เอกสารแนบ', 'attachments'], 'ไฟล์'),
+            'p_43': find_col(['เงื่อนไขพิเศษ4.3', 'เงื่อนไขพิเศษ 4.3', 'เงื่อนไข 4.3', 'เงื่อนไขเพิ่มเติม 4.3'], 'เงื่อนไขพิเศษ4.3'),
+            'p_44': find_col(['เงื่อนไขพิเศษ4.4', 'เงื่อนไขพิเศษ 4.4', 'เงื่อนไข 4.4', 'เงื่อนไขเพิ่มเติม 4.4'], 'เงื่อนไขพิเศษ4.4')
         }
         if mapping['expire'] in df.columns:
             df[mapping['expire']] = pd.to_datetime(df[mapping['expire']], dayfirst=True, errors='coerce', format='mixed')
@@ -1158,6 +1160,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         "expire_day": str(expire_date.day),
                                         "expire_month": thai_months[expire_date.month],
                                         "expire_year": str(expire_date.year + 543),
+                                        "p_43": str(row_item.get(cols.get('p_43', ''), '')),
+                                        "p_44": str(row_item.get(cols.get('p_44', ''), '')),
                                     }
                                     docx_buf = create_docx_document(context)
                                     clean_name = str(row_item.get(cols['name'], 'ผู้ประกอบการ')).replace('/', '_').replace('\\', '_')
@@ -1325,8 +1329,8 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         st.markdown("---")
                                         st.markdown("**เงื่อนไขเพิ่มเติม (ข้อ 4)**")
                                         c_41, c_42 = st.columns(2)
-                                        p_43 = c_41.text_input("เงื่อนไขเพิ่มเติม 4.3", value="", key=f"p_43_{index}")
-                                        p_44 = c_42.text_input("เงื่อนไขเพิ่มเติม 4.4", value="", key=f"p_44_{index}")
+                                        p_43 = c_41.text_input("เงื่อนไขเพิ่มเติม 4.3", value=row.get(cols.get('p_43', ''), ''), key=f"p_43_{index}")
+                                        p_44 = c_42.text_input("เงื่อนไขเพิ่มเติม 4.4", value=row.get(cols.get('p_44', ''), ''), key=f"p_44_{index}")
                                         st.markdown("---")
                                         p_rcpt_date = c_d1.date_input("ลงวันที่ (ใบเสร็จ)", value=issue_default, key=f"p_rcpt_date_{index}")
                                         p_issue = c_d2.date_input("วันที่ออกใบอนุญาต", value=issue_default, key=f"p_issue_{index}")
@@ -1350,6 +1354,10 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             cols['rcpt_date']: p_rcpt_date.strftime('%d/%m/%Y'),
                                             cols['expire']: p_expire.strftime('%d/%m/%Y')
                                         }
+                                        if cols.get('p_43') and cols['p_43'] in df.columns:
+                                            update_data[cols['p_43']] = p_43
+                                        if cols.get('p_44') and cols['p_44'] in df.columns:
+                                            update_data[cols['p_44']] = p_44
                                         
                                         # Save to Google Sheet
                                         with st.spinner("กำลังบันทึกข้อมูลลง Google Sheet..."):
