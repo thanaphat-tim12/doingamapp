@@ -263,9 +263,9 @@ def create_docx_document(data):
     val_44 = str(data.get('p_44', '')).strip()
 
     if val_43 and not val_44:
-        template_file = "template 3.docx"
-    elif val_43 and val_44:
         template_file = "template 2.docx"
+    elif val_43 and val_44:
+        template_file = "template 3.docx"
     else:
         template_file = "template 1.docx"
 
