@@ -18,5 +18,6 @@ npm-debug.log*
 Thumbs.db
 
 credentials.json
+credentials_backup.json
 
 __pycache__
