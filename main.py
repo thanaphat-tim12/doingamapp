@@ -389,13 +389,10 @@ def create_docx_document(data):
                             replacement_val = ""
                             pattern = re.escape(placeholder)
                         else:
-                            # ถ้าไม่มีจุดเลย ให้ใส่จุดไข่ปลาคั่น
-                            if key in ["p_name", "p_shop", "p_type", "p_fee_text", "p_rcpt_book"]:
-                                replacement_val = "................................................"
-                            elif key in ["p_moo", "p_shop_m", "d", "d2", "m", "m2", "y", "y2", "p_nationality", "p_license_book", "p_license_no", "p_license_year", "p_addr", "p_shopaddr"]:
-                                replacement_val = "............"
-                            else:
-                                replacement_val = "............................"
+                            # ในเทมเพลต Word (.docx) มีการใช้ปุ่ม Tab (\t) และตั้งค่า Tab Leader (เส้นประนำทาง) อยู่แล้ว
+                            # การใส่จุดไข่ปลาจริงซ้ำซ้อนจะทำให้ตัวอักษรเลื่อนตกบรรทัด (Overflow)
+                            # จึงใช้ค่าว่าง "" เพื่อให้ Tab Leader ของ Word วาดจุดไข่ปลาที่พอดีกับหน้ากระดาษโดยอัตโนมัติ
+                            replacement_val = ""
                             pattern = re.escape(placeholder)
                     else:
                         replacement_val = str(val)
