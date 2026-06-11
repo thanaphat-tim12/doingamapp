@@ -191,87 +191,87 @@ def create_pdf_overlay(data):
     output_stream.seek(0)
     return output_stream
 
+def replace_pattern_in_runs(runs, pattern, replacement):
+    run_texts = [r.text for r in runs]
+    full_text = "".join(run_texts)
+    import re
+    matches = list(re.finditer(pattern, full_text))
+    if not matches:
+        return False
+    for match in reversed(matches):
+        start_char, end_char = match.span()
+        char_map = []
+        for r_idx, r_text in enumerate(run_texts):
+            for c_idx in range(len(r_text)):
+                char_map.append((r_idx, c_idx))
+        if not char_map:
+            continue
+        start_run_idx, start_run_char = char_map[start_char]
+        if end_char - 1 < len(char_map):
+            end_run_idx, end_run_char = char_map[end_char - 1]
+        else:
+            end_run_idx, end_run_char = char_map[-1]
+        if start_run_idx == end_run_idx:
+            r = runs[start_run_idx]
+            run_text_list = list(r.text)
+            run_text_list[start_run_char : start_run_char + (end_char - start_char)] = list(replacement)
+            r.text = "".join(run_text_list)
+        else:
+            r_start = runs[start_run_idx]
+            start_text = r_start.text[:start_run_char] + replacement
+            r_start.text = start_text
+            for idx in range(start_run_idx + 1, end_run_idx):
+                runs[idx].text = ""
+            r_end = runs[end_run_idx]
+            end_text = r_end.text[end_run_char + 1:]
+            r_end.text = end_text
+        run_texts = [r.text for r in runs]
+    return True
+
+def trim_dots_from_runs(runs, to_remove):
+    import re
+    for run in reversed(runs):
+        if to_remove <= 0:
+            break
+        text = run.text
+        if not text:
+            continue
+        matches = list(re.finditer(r'\.{3,}', text))
+        if not matches:
+            continue
+        new_text = list(text)
+        for match in reversed(matches):
+            span_start, span_end = match.span()
+            span_len = span_end - span_start
+            rem = min(to_remove, span_len)
+            del new_text[span_end - rem : span_end]
+            to_remove -= rem
+            if to_remove <= 0:
+                break
+        run.text = "".join(new_text)
+
+def trim_trailing_tabs_if_long(paragraph):
+    runs = paragraph.runs
+    if not runs:
+        return
+    trailing_run_indices = []
+    for i in range(len(runs) - 1, -1, -1):
+        text = runs[i].text
+        if text and any(c not in '\t ' for c in text):
+            break
+        trailing_run_indices.append(i)
+    if not trailing_run_indices:
+        return
+    non_trailing_text = "".join([runs[i].text for i in range(len(runs)) if i not in trailing_run_indices])
+    if len(non_trailing_text) >= 50:
+        for idx in trailing_run_indices:
+            runs[idx].text = ""
+
 def create_docx_document(data):
     # แปลงตัวเลขทั้งหมดใน data ให้เป็นตัวเลขไทย
     def to_thai_numerals(v):
         if v is None: return ""
         return str(v).translate(str.maketrans("0123456789", "๐๑๒๓๔๕๖๗๘๙"))
-
-    def replace_pattern_in_runs(runs, pattern, replacement):
-        run_texts = [r.text for r in runs]
-        full_text = "".join(run_texts)
-        import re
-        matches = list(re.finditer(pattern, full_text))
-        if not matches:
-            return False
-        for match in reversed(matches):
-            start_char, end_char = match.span()
-            char_map = []
-            for r_idx, r_text in enumerate(run_texts):
-                for c_idx in range(len(r_text)):
-                    char_map.append((r_idx, c_idx))
-            if not char_map:
-                continue
-            start_run_idx, start_run_char = char_map[start_char]
-            if end_char - 1 < len(char_map):
-                end_run_idx, end_run_char = char_map[end_char - 1]
-            else:
-                end_run_idx, end_run_char = char_map[-1]
-            if start_run_idx == end_run_idx:
-                r = runs[start_run_idx]
-                run_text_list = list(r.text)
-                run_text_list[start_run_char : start_run_char + (end_char - start_char)] = list(replacement)
-                r.text = "".join(run_text_list)
-            else:
-                r_start = runs[start_run_idx]
-                start_text = r_start.text[:start_run_char] + replacement
-                r_start.text = start_text
-                for idx in range(start_run_idx + 1, end_run_idx):
-                    runs[idx].text = ""
-                r_end = runs[end_run_idx]
-                end_text = r_end.text[end_run_char + 1:]
-                r_end.text = end_text
-            run_texts = [r.text for r in runs]
-        return True
-
-    def trim_dots_from_runs(runs, to_remove):
-        import re
-        for run in reversed(runs):
-            if to_remove <= 0:
-                break
-            text = run.text
-            if not text:
-                continue
-            matches = list(re.finditer(r'\.{3,}', text))
-            if not matches:
-                continue
-            new_text = list(text)
-            for match in reversed(matches):
-                span_start, span_end = match.span()
-                span_len = span_end - span_start
-                rem = min(to_remove, span_len)
-                del new_text[span_end - rem : span_end]
-                to_remove -= rem
-                if to_remove <= 0:
-                    break
-            run.text = "".join(new_text)
-
-    def trim_trailing_tabs_if_long(paragraph):
-        runs = paragraph.runs
-        if not runs:
-            return
-        trailing_run_indices = []
-        for i in range(len(runs) - 1, -1, -1):
-            text = runs[i].text
-            if text and any(c not in '\t ' for c in text):
-                break
-            trailing_run_indices.append(i)
-        if not trailing_run_indices:
-            return
-        non_trailing_text = "".join([runs[i].text for i in range(len(runs)) if i not in trailing_run_indices])
-        if len(non_trailing_text) >= 50:
-            for idx in trailing_run_indices:
-                runs[idx].text = ""
 
     raw_data = {k: to_thai_numerals(v) for k, v in data.items()}
 
@@ -416,6 +416,59 @@ def create_docx_document(data):
             for cell in row.cells:
                 replace_placeholders(cell.paragraphs)
 
+    output_stream = io.BytesIO()
+    doc.save(output_stream)
+    output_stream.seek(0)
+    return output_stream
+
+def create_app_docx_document(data):
+    # แปลงตัวเลขทั้งหมดใน data ให้เป็นตัวเลขไทย
+    def to_thai_numerals(v):
+        if v is None: return ""
+        if isinstance(v, bool): return v
+        return str(v).translate(str.maketrans("0123456789", "๐๑๒๓๔๕๖๗๘๙"))
+    
+    raw_data = {k: to_thai_numerals(v) for k, v in data.items()}
+    
+    # แทนค่าช่อง checkbox
+    mapped_data = {}
+    for k, v in raw_data.items():
+        if k.startswith("chk_"):
+            mapped_data[k] = "☑" if v else "☐"
+        else:
+            mapped_data[k] = str(v) if v is not None else ""
+            
+    template_file = "แบบคำขอรับใบอนุญาต_ต่อใบอนุญาต add.docx"
+    doc = Document(template_file)
+    
+    def replace_placeholders(paragraphs):
+        for paragraph in list(paragraphs):
+            orig_len = len(paragraph.text)
+            has_changes = False
+            
+            for key, val in mapped_data.items():
+                placeholder = f"{{{{{key}}}}}"
+                if placeholder in paragraph.text:
+                    is_empty = not val or str(val).strip() in ["", "-", "None"]
+                    replacement_val = "" if is_empty else str(val)
+                    pattern = re.escape(placeholder)
+                    
+                    if replace_pattern_in_runs(paragraph.runs, pattern, replacement_val):
+                        has_changes = True
+                        
+            if has_changes:
+                new_len = len(paragraph.text)
+                diff_len = new_len - orig_len
+                if diff_len > 0:
+                    trim_dots_from_runs(paragraph.runs, diff_len)
+                trim_trailing_tabs_if_long(paragraph)
+                
+    replace_placeholders(doc.paragraphs)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                replace_placeholders(cell.paragraphs)
+                
     output_stream = io.BytesIO()
     doc.save(output_stream)
     output_stream.seek(0)
@@ -1518,21 +1571,18 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             }
                                             
                                             try:
-                                                app_pdf_buffer = create_app_pdf_overlay(app_context)
-                                                if app_pdf_buffer:
-                                                    st.download_button(
-                                                        label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์คำขอ (PDF)",
-                                                        data=app_pdf_buffer,
-                                                        file_name=f"คำขอ_{a_name}.pdf",
-                                                        mime="application/pdf",
-                                                        type="secondary",
-                                                        key=f"dl_app_btn_{index}"
-                                                    )
-                                                    st.success("สร้างไฟล์ PDF คำขอพร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
-                                                else:
-                                                    st.error("ไม่พบไฟล์แบบฟอร์มคำขอ (app_template.pdf)")
+                                                app_docx_buffer = create_app_docx_document(app_context)
+                                                st.download_button(
+                                                    label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์คำขอ (Word)",
+                                                    data=app_docx_buffer,
+                                                    file_name=f"แบบคำขอ_{a_name}.docx",
+                                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                    type="secondary",
+                                                    key=f"dl_app_btn_{index}"
+                                                )
+                                                st.success("สร้างไฟล์ Word คำขอพร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
                                             except Exception as e:
-                                                st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ PDF คำขอ: {e}")
+                                                st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ Word คำขอ: {e}")
                                     
                                     with tab3:
                                         st.subheader("📋 แบบตรวจกิจการ")
