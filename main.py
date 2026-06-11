@@ -1581,17 +1581,35 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             
                                             try:
                                                 app_docx_buffer = create_app_docx_document(app_context)
-                                                st.download_button(
-                                                    label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์คำขอ (Word)",
-                                                    data=app_docx_buffer,
-                                                    file_name=f"แบบคำขอ_{a_name}.docx",
-                                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                                    type="secondary",
-                                                    key=f"dl_app_btn_{index}"
-                                                )
-                                                st.success("สร้างไฟล์ Word คำขอพร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
+                                                app_pdf_buffer = create_app_pdf_overlay(app_context)
+                                                
+                                                col1, col2 = st.columns(2)
+                                                with col1:
+                                                    st.download_button(
+                                                        label="📥 ดาวน์โหลดไฟล์คำขอ (Word)",
+                                                        data=app_docx_buffer,
+                                                        file_name=f"แบบคำขอ_{a_name}.docx",
+                                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                        type="secondary",
+                                                        key=f"dl_app_btn_word_{index}",
+                                                        use_container_width=True
+                                                    )
+                                                with col2:
+                                                    if app_pdf_buffer:
+                                                        st.download_button(
+                                                            label="📥 ดาวน์โหลดไฟล์คำขอ (PDF)",
+                                                            data=app_pdf_buffer,
+                                                            file_name=f"แบบคำขอ_{a_name}.pdf",
+                                                            mime="application/pdf",
+                                                            type="primary",
+                                                            key=f"dl_app_btn_pdf_{index}",
+                                                            use_container_width=True
+                                                        )
+                                                    else:
+                                                        st.error("ไม่สามารถสร้างไฟล์ PDF คำขอได้เนื่องจากไม่พบไฟล์เทมเพลต")
+                                                st.success("สร้างไฟล์คำขอสำเร็จแล้ว! คุณสามารถเลือกดาวน์โหลดได้ทั้งแบบ Word (สำหรับนำไปแก้ไข) และ PDF (สำหรับสั่งพิมพ์)")
                                             except Exception as e:
-                                                st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ Word คำขอ: {e}")
+                                                st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์คำขอ: {e}")
                                     
                                     with tab3:
                                         st.subheader("📋 แบบตรวจกิจการ")
