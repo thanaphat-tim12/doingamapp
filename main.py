@@ -450,7 +450,16 @@ def create_app_docx_document(data):
                 placeholder = f"{{{{{key}}}}}"
                 if placeholder in paragraph.text:
                     is_empty = not val or str(val).strip() in ["", "-", "None"]
-                    replacement_val = "" if is_empty else str(val)
+                    if is_empty:
+                        # หากไม่มีข้อมูล ให้แทนที่ด้วยเว้นวรรคเพื่อให้เส้นใต้แบบจุด (Dotted Underline) ใน Word แสดงผลเป็นเส้นประ
+                        if key in ["p_agent", "p_soi", "p_road"]:
+                            replacement_val = "                 "
+                        elif key in ["p_name", "p_shop", "p_type", "p_fee_text", "p_rcpt_book"]:
+                            replacement_val = "                              "
+                        else:
+                            replacement_val = "          "
+                    else:
+                        replacement_val = str(val)
                     pattern = re.escape(placeholder)
                     
                     if replace_pattern_in_runs(paragraph.runs, pattern, replacement_val):
