@@ -1439,7 +1439,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         
                                         # Save to Google Sheet
                                         with st.spinner("กำลังบันทึกข้อมูลลง Google Sheet..."):
-                                            if update_gsheet(index + 2, update_data):
+                                            if update_gsheet(index + 2, update_data, sheet_name=target_sheet):
                                                 st.toast("✅ บันทึกข้อมูลลงชีตเรียบร้อยแล้ว", icon="💾")
                                             else:
                                                 st.error("⚠️ บันทึกข้อมูลลงชีตไม่สำเร็จ แต่จะดำเนินการสร้าง PDF ต่อ")
@@ -1481,16 +1481,50 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         }
                                         try:
                                             docx_buffer = create_docx_document(context)
-                                            st.download_button(
-                                                label="📥 คลิกที่นี่เพื่อดาวน์โหลดไฟล์ใบอนุญาต (Word)",
-                                                data=docx_buffer,
-                                                file_name=f"ใบอนุญาต_{p_name}.docx",
-                                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                                type="secondary"
-                                            )
-                                            st.success("สร้างไฟล์ Word พร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
+                                            
+                                            has_special = bool(str(p_43).strip() or str(p_44).strip())
+                                            
+                                            if not has_special:
+                                                pdf_buffer = create_pdf_overlay(context)
+                                                col1, col2 = st.columns(2)
+                                                with col1:
+                                                    st.download_button(
+                                                        label="📥 ดาวน์โหลดไฟล์ใบอนุญาต (Word)",
+                                                        data=docx_buffer,
+                                                        file_name=f"ใบอนุญาต_{p_name}.docx",
+                                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                        type="secondary",
+                                                        key=f"dl_lic_btn_word_{index}",
+                                                        use_container_width=True
+                                                    )
+                                                with col2:
+                                                    if pdf_buffer:
+                                                        st.download_button(
+                                                            label="📥 ดาวน์โหลดไฟล์ใบอนุญาต (PDF)",
+                                                            data=pdf_buffer,
+                                                            file_name=f"ใบอนุญาต_{p_name}.pdf",
+                                                            mime="application/pdf",
+                                                            type="primary",
+                                                            key=f"dl_lic_btn_pdf_{index}",
+                                                            use_container_width=True
+                                                        )
+                                                    else:
+                                                        st.error("ไม่สามารถสร้างไฟล์ PDF ใบอนุญาตได้เนื่องจากไม่พบไฟล์เทมเพลต")
+                                                st.success("สร้างไฟล์ใบอนุญาตสำเร็จแล้ว! สามารถเลือกดาวน์โหลดรูปแบบ Word หรือ PDF ได้")
+                                            else:
+                                                st.download_button(
+                                                    label="📥 ดาวน์โหลดไฟล์ใบอนุญาต (Word)",
+                                                    data=docx_buffer,
+                                                    file_name=f"ใบอนุญาต_{p_name}.docx",
+                                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                    type="secondary",
+                                                    key=f"dl_lic_btn_word_only_{index}",
+                                                    use_container_width=True
+                                                )
+                                                st.info("💡 เนื่องจากมีเงื่อนไขเพิ่มเติมระบบจึงสร้างเฉพาะไฟล์ Word เพื่อให้คุณปรับแต่งข้อความเพิ่มเติมได้สะดวกครับ")
+                                                st.success("สร้างไฟล์ Word ใบอนุญาตพร้อมแล้ว กรุณากดปุ่มดาวน์โหลดด้านบน ↑")
                                         except Exception as e:
-                                            st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ Word: {e}")
+                                            st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์ใบอนุญาต: {e}")
                                             
                                     with tab2:
                                         st.subheader("จัดการข้อมูลและแก้ไขก่อนพิมพ์ (แบบคำขอ)")
