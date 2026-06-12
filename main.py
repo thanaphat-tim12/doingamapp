@@ -927,6 +927,36 @@ with st.sidebar:
 # --- หน้า Dashboard ---
 if menu == "หน้าแรก (Dashboard)":
     st.header(f"📊 สรุปข้อมูล: {app_category}")
+    
+    # --- ส่วนดาวน์โหลดแบบตรวจกิจการ (ย้ายมาหน้าแรกตามคำขอผู้ใช้) ---
+    with st.container(border=True):
+        col_d1, col_d2 = st.columns([3, 1])
+        with col_d1:
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">📋</span>
+                <div style="line-height: 1.2;">
+                    <h4 style="margin: 0; color: #1E3A8A; font-weight: bold;">ดาวน์โหลดแบบตรวจกิจการเปล่า (PDF)</h4>
+                    <span style="font-size: 13px; color: #6B7280;">สำหรับนำไปใช้ในการออกตรวจหน้างานภายนอก</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_d2:
+            inspection_file_path = "แบบตรวจกิจการ (ปรับปรุง).pdf"
+            if os.path.exists(inspection_file_path):
+                with open(inspection_file_path, "rb") as f:
+                    st.download_button(
+                        label="📥 ดาวน์โหลดแบบตรวจ (PDF)",
+                        data=f,
+                        file_name="แบบตรวจกิจการ_อบต_ดอยงาม.pdf",
+                        mime="application/pdf",
+                        key="inspection_btn_dashboard",
+                        type="primary",
+                        use_container_width=True
+                    )
+            else:
+                st.error("❌ ไม่พบไฟล์แบบตรวจ")
+                
     if not df.empty:
         # ใช้ df ที่ถูกกรองมาแล้วจากระดับ Global
         f_df = df
@@ -1322,7 +1352,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                     st.rerun()
                                     
                             if st.session_state.get(f"m_{index}") == "print":
-                                tab1, tab2, tab3 = st.tabs(["📄 ใบอนุญาต (อภ.๒)", "📝 คำขอ", "📋 แบบตรวจ"])
+                                tab1, tab2 = st.tabs(["📄 ใบอนุญาต (อภ.๒)", "📝 คำขอ"])
                                 
                                 with tab1:
                                     st.subheader("จัดการข้อมูลและแก้ไขก่อนพิมพ์ (อภ.๒)")
@@ -1644,24 +1674,6 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                                 st.success("สร้างไฟล์คำขอสำเร็จแล้ว! คุณสามารถเลือกดาวน์โหลดได้ทั้งแบบ Word (สำหรับนำไปแก้ไข) และ PDF (สำหรับสั่งพิมพ์)")
                                             except Exception as e:
                                                 st.error(f"เกิดข้อผิดพลาดในการสร้างไฟล์คำขอ: {e}")
-                                    
-                                    with tab3:
-                                        st.subheader("📋 แบบตรวจกิจการ")
-                                        st.info("คุณสามารถดาวน์โหลดแบบตรวจกิจการเปล่า เพื่อนำไปใช้ในการออกตรวจหน้างานได้ที่นี่ครับ")
-                                        
-                                        inspection_file_path = "แบบตรวจกิจการ (ปรับปรุง).pdf"
-                                        if os.path.exists(inspection_file_path):
-                                            with open(inspection_file_path, "rb") as f:
-                                                btn = st.download_button(
-                                                    label="📥 ดาวน์โหลดแบบตรวจกิจการ (PDF)",
-                                                    data=f,
-                                                    file_name="แบบตรวจกิจการ_อบต_ดอยงาม.pdf",
-                                                    mime="application/pdf",
-                                                    key=f"inspection_btn_{index}",
-                                                    type="primary"
-                                                )
-                                        else:
-                                            st.error("❌ ไม่พบไฟล์ 'แบบตรวจกิจการ (ปรับปรุง).pdf' ในระบบ")
                             
                             elif st.session_state.get(f"m_{index}") == "edit":
                                 st.subheader("📝 แก้ไขข้อมูล / ต่ออายุ")
