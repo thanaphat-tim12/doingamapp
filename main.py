@@ -127,8 +127,8 @@ def create_pdf_overlay(data):
     can.drawString(120, y7, str(data.get('p_shop_addr', '')))
     can.drawString(205, y7, str(data.get('p_shop_moo', '')))
     can.drawString(280, y7, str(data.get('p_shop_tumbon', '')))
-    can.drawString(420, y7, str(data.get('p_shop_amphoe', ''))) # ขยับไป 420
-    can.drawString(535, y7, str(data.get('p_shop_province', ''))) # ขยับไป 535
+    can.drawString(400, y7, str(data.get('p_shop_amphoe', ''))) # กลับมา 400
+    can.drawString(500, y7, str(data.get('p_shop_province', ''))) # กลับมา 500
     
     # วาดบรรทัดที่ 8: โทรศัพท์สถานประกอบการ
     can.drawString(150, y8, str(data.get('p_shop_phone', '')))
