@@ -464,7 +464,7 @@ def create_app_docx_document(data):
                             replacement_val = "          "
                     else:
                         if key in ["p_road", "p_nationality"]:
-                            replacement_val = str(val) + "                  "  # เติมช่องว่าง 18 ตัวด้านหลังเพื่อให้เส้นประยื่นยาวออกมา
+                            replacement_val = str(val) + "            "  # เติมช่องว่าง 12 ตัวด้านหลังเพื่อให้เส้นประยื่นยาวออกมา
                         else:
                             replacement_val = str(val)
                     pattern = re.escape(placeholder)
