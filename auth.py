@@ -21,9 +21,9 @@ def clean_private_key(pk):
     return pk.replace("\\n", "\n").replace("\\\\n", "\n")
 
 def init_firebase():
-    # ลบการเชื่อมต่อเดิมทิ้งเพื่อบังคับโหลดค่าใหม่จาก Secrets (ป้องกันการจำค่าเก่าที่ผิด)
-    for app_name in list(firebase_admin._apps.keys()):
-        firebase_admin.delete_app(firebase_admin._apps[app_name])
+    # ตรวจสอบก่อนว่ามีการเชื่อมต่ออยู่แล้วหรือไม่ เพื่อป้องกันการทำซ้ำ
+    if firebase_admin._apps:
+        return
         
     try:
         # 1. ลองโหลดจากไฟล์ credentials.json ก่อน
@@ -49,7 +49,11 @@ def init_firebase():
                 st.error("❌ ไม่พบข้อมูลการเชื่อมต่อ Firebase ใน Secrets")
                 return
 
-        firebase_admin.initialize_app(cred)
+        # ตรวจสอบซ้ำอีกรอบด้วย get_app เผื่อกรณี Race Condition จากการทำงานแบบ Multi-threading ใน Streamlit
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+            firebase_admin.initialize_app(cred)
     except Exception as e:
         st.error(f"❌ โหลด Firebase ไม่สำเร็จ: {e}")
 
