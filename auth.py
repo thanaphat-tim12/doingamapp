@@ -269,7 +269,7 @@ def check_login():
                             source = "gspread_credentials (Cloud Settings)"
                         elif 'admin_password' in st.secrets:
                             source = "root secrets (Git/Local)"
-                        st.error(f"รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง (ใช้รหัสจาก {source}: {masked_pw})")
+                        st.error(f"รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง (ใช้รหัสจาก {source}: {masked_pw}). Keys in secrets: {list(st.secrets.keys())}")
                         
         st.markdown('<br>', unsafe_allow_html=True)
     return False
