@@ -110,8 +110,8 @@ def create_pdf_overlay(data):
     can.drawString(125, y3, str(data.get('p_addr', '')))
     can.drawString(205, y3, str(data.get('p_moo', '')))
     can.drawString(280, y3, str(data.get('p_tumbon', '')))
-    can.drawString(400, y3, str(data.get('p_amphoe', ''))) # ขยับไป 420
-    can.drawString(500, y3, str(data.get('p_province', ''))) # ขยับไป 535
+    can.drawString(420, y3, str(data.get('p_amphoe', ''))) # ขยับไป 420
+    can.drawString(535, y3, str(data.get('p_province', ''))) # ขยับไป 535
     
     # วาดบรรทัดที่ 4: CID / โทรศัพท์
     can.drawString(cid_x, y4, format_cid(data.get('p_cid', '')))
