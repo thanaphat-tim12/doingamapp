@@ -237,18 +237,17 @@ def check_login():
                 admin_submit = st.form_submit_button("เข้าสู่ระบบผู้ดูแลระบบ", use_container_width=True, type="primary")
                 
                 if admin_submit:
-                    # Check password from secrets
                     correct_pw = None
-                    # 1. ลองหาที่ระดับนอกสุด
-                    if 'admin_password' in st.secrets:
-                        correct_pw = st.secrets['admin_password']
-                    # 2. ลองหาในก้อน gspread_credentials (เผื่อคุณพิมพ์ต่อท้ายในกลุ่มนั้น)
-                    elif 'gspread_credentials' in st.secrets:
-                        # ตรวจสอบว่า st.secrets['gspread_credentials'] เป็น dict หรือไม่
+                    # 1. ลองหาในก้อน gspread_credentials ก่อน (เนื่องจากมักตั้งค่าบน Streamlit Cloud)
+                    if 'gspread_credentials' in st.secrets:
                         try:
                             if 'admin_password' in st.secrets['gspread_credentials']:
                                 correct_pw = st.secrets['gspread_credentials']['admin_password']
-                        except: pass
+                        except:
+                            pass
+                    # 2. ลองหาที่ระดับนอกสุด (กรณีวางแยกหรือใช้ค่าจาก local .streamlit/secrets.toml)
+                    if not correct_pw and 'admin_password' in st.secrets:
+                        correct_pw = st.secrets['admin_password']
                     
                     if not correct_pw:
                         correct_pw = 'admin1234' # Fallback default
