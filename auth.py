@@ -258,18 +258,7 @@ def check_login():
                         st.success("เข้าสู่ระบบแอดมินสำเร็จ!")
                         st.rerun()
                     else:
-                        pw_str = str(correct_pw).strip()
-                        if len(pw_str) > 2:
-                            masked_pw = pw_str[0] + "*" * (len(pw_str) - 2) + pw_str[-1]
-                        else:
-                            masked_pw = "*" * len(pw_str)
-                            
-                        source = "default fallback"
-                        if 'gspread_credentials' in st.secrets and 'admin_password' in st.secrets['gspread_credentials']:
-                            source = "gspread_credentials (Cloud Settings)"
-                        elif 'admin_password' in st.secrets:
-                            source = "root secrets (Git/Local)"
-                        st.error(f"รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง (ใช้รหัสจาก {source}: {masked_pw}). Keys in secrets: {list(st.secrets.keys())}")
+                        st.error("รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง")
                         
         st.markdown('<br>', unsafe_allow_html=True)
     return False
