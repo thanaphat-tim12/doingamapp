@@ -736,6 +736,41 @@ def delete_gsheet_rows(row_indices, sheet_name=None):
         st.error(f"❌ ลบข้อมูลไม่สำเร็จ: {e}")
         return False
 
+def create_new_worksheet(new_name):
+    """Create a new worksheet in the Google Sheet and copy headers from the first sheet"""
+    try:
+        client = get_gspread_client()
+        if not client: 
+            st.error("❌ ไม่สามารถเชื่อมต่อ Google Sheets ได้")
+            return False
+        sh = client.open_by_url(SHEET_URL)
+        
+        # ตรวจสอบว่าชื่อชีตซ้ำหรือไม่
+        existing_names = [s.title for s in sh.worksheets()]
+        if new_name in existing_names:
+            st.error(f"⚠️ ชีตชื่อ '{new_name}' มีอยู่แล้วในระบบ")
+            return False
+            
+        # ดึงหัวตารางจากแผ่นแรก
+        first_sheet = sh.get_worksheet(0)
+        headers = first_sheet.row_values(1) # อ่านแถวที่ 1
+        
+        # สร้างชีตใหม่ กำหนดแถว 1000 คอลัมน์เท่ากับหัวตารางหลัก
+        num_cols = max(len(headers), 20)
+        new_sheet = sh.add_worksheet(title=new_name, rows="1000", cols=str(num_cols))
+        
+        # เขียนหัวตารางลงไปในชีตใหม่
+        new_sheet.append_row(headers)
+        
+        # เคลียร์ Cache ของ Streamlit เพื่อให้อัปเดตชื่อชีตทันที
+        st.cache_data.clear()
+        
+        st.success(f"🎉 สร้างชีต '{new_name}' และคัดลอกหัวตารางสำเร็จเรียบร้อยแล้ว!")
+        return True
+    except Exception as e:
+        st.error(f"❌ เกิดข้อผิดพลาดในการสร้างชีตใหม่: {e}")
+        return False
+
 def print_preview(title, content_html):
     html_template = f"""
     <html>
@@ -886,6 +921,19 @@ with st.sidebar:
     # 2. ให้ผู้ใช้เลือกชีตเป้าหมาย
     target_sheet = st.selectbox("เลือกชีตเป้าหมาย (ออกตรวจ)", sheet_names)
     
+    # ปุ่มสร้างชีตใหม่ (มีขอบเขต Expander สวยงาม)
+    with st.sidebar.expander("➕ สร้างรอบออกตรวจใหม่"):
+        with st.form("create_new_sheet_form"):
+            new_sheet_name = st.text_input("ชื่อรอบการตรวจใหม่", placeholder="เช่น ออกตรวจ 15.6.68")
+            submit_create = st.form_submit_button("สร้างรอบตรวจใหม่", use_container_width=True, type="primary")
+            if submit_create:
+                if not new_sheet_name.strip():
+                    st.error("⚠️ กรุณาระบุชื่อชีตใหม่")
+                else:
+                    success = create_new_worksheet(new_sheet_name.strip())
+                    if success:
+                        st.rerun()
+                        
     # 3. โหลดข้อมูลจากชีตที่เลือกมาใช้งาน
     df, cols, _ = load_data(target_sheet)
     
