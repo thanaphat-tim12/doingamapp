@@ -469,9 +469,9 @@ def create_docx_document(data):
                         if key in ["p_license_book", "p_license_no", "p_license_year"]:
                             replacement_val = f"   {val_str}   "
                         elif key in ["p_name", "p_shop", "p_type"]:
-                            replacement_val = f"      {val_str}      "
+                            replacement_val = f"  {val_str}  "
                         elif key == "p_nationality":
-                            replacement_val = f"   {val_str}      "
+                            replacement_val = f"  {val_str}  "
                         else:
                             replacement_val = val_str
                             
