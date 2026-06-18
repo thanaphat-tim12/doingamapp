@@ -36,6 +36,75 @@ def format_cid(cid):
         return f"{cid[0]} {cid[1:5]} {cid[5:10]} {cid[10:12]} {cid[12]}"
     return cid
 
+def num_to_thai_baht(num_str):
+    try:
+        num_str = str(num_str).replace(',', '').strip()
+        if not num_str or num_str == '-':
+            return '-'
+        num = float(num_str)
+    except ValueError:
+        return '-'
+    if num == 0:
+        return 'ศูนย์บาทถ้วน'
+    baht = int(num)
+    satang = int(round((num - baht) * 100))
+    def convert_group(val_str, is_first_group):
+        thai_digits = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า']
+        thai_positions = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน']
+        n = len(val_str)
+        result = ''
+        for i, char in enumerate(val_str):
+            digit = int(char)
+            pos = n - 1 - i
+            if digit != 0:
+                if pos == 1 and digit == 1:
+                    result += 'สิบ'
+                elif pos == 1 and digit == 2:
+                    result += 'ยี่สิบ'
+                elif pos == 0 and digit == 1:
+                    if n > 1 or not is_first_group:
+                        result += 'เอ็ด'
+                    else:
+                        result += 'หนึ่ง'
+                else:
+                    result += thai_digits[digit] + thai_positions[pos]
+        return result
+    baht_str = str(baht)
+    millions_groups = []
+    while baht_str:
+        millions_groups.append(baht_str[-6:])
+        baht_str = baht_str[:-6]
+    baht_text = ''
+    num_groups = len(millions_groups)
+    for idx, group in enumerate(reversed(millions_groups)):
+        is_first_group = (idx == 0)
+        group_text = convert_group(group, is_first_group)
+        if group_text:
+            baht_text += group_text
+            if idx < num_groups - 1:
+                baht_text += 'ล้าน'
+        else:
+            if idx < num_groups - 1 and baht_text:
+                baht_text += 'ล้าน'
+    if baht_text:
+        baht_text += 'บาท'
+    satang_text = ''
+    if satang > 0:
+        satang_text = convert_group(str(satang), True) + 'สตางค์'
+        if baht_text == '':
+            baht_text = satang_text
+        else:
+            baht_text += satang_text
+    else:
+        if baht_text:
+            baht_text += 'ถ้วน'
+    return baht_text
+
+def update_fee_text(index):
+    fee_val = st.session_state.get(f"p_fee_{index}", "")
+    st.session_state[f"p_fee_txt_{index}"] = num_to_thai_baht(fee_val)
+
+
 def create_pdf_overlay(data):
     # แปลงตัวเลขทั้งหมดใน data ให้เป็นตัวเลขไทย
     def to_thai_numerals(v):
@@ -1313,7 +1382,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         "p_shop": str(row_item.get(cols['shop'], '')),
                                         "p_type": str(row_item.get(cols['type'], '')),
                                         "p_fee": str(row_item.get(cols['fee'], '')),
-                                        "p_fee_text": "-",
+                                        "p_fee_text": num_to_thai_baht(row_item.get(cols['fee'], '')) if row_item.get(cols['fee']) else "-",
                                         "p_rcpt_book": str(row_item.get(cols['rcpt_book'], '')),
                                         "p_rcpt_no": str(row_item.get(cols['rcpt_no'], '')),
                                         "p_rcpt_date": f"{rcpt_date.day} {thai_months[rcpt_date.month]} {rcpt_date.year + 543}",
@@ -1482,8 +1551,21 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                         p_license_year = c_l3.text_input("ปี (พ.ศ.)", value=str(datetime.now().year + 543), key=f"p_l_year_{index}")
                                         
                                         c_r1, c_r2, c_r3, c_r4 = st.columns(4)
-                                        p_fee = c_r1.text_input("ค่าธรรมเนียม (ตัวเลข)", value=str(row.get(cols['fee'], '')), key=f"p_fee_{index}")
-                                        p_fee_text = c_r2.text_input("ค่าธรรมเนียม (ตัวอักษร)", value="-", key=f"p_fee_txt_{index}")
+                                        fee_val = str(row.get(cols['fee'], ''))
+                                        default_fee_txt = num_to_thai_baht(fee_val)
+                                        
+                                        p_fee = c_r1.text_input(
+                                            "ค่าธรรมเนียม (ตัวเลข)", 
+                                            value=fee_val, 
+                                            key=f"p_fee_{index}",
+                                            on_change=update_fee_text,
+                                            args=(index,)
+                                        )
+                                        p_fee_text = c_r2.text_input(
+                                            "ค่าธรรมเนียม (ตัวอักษร)", 
+                                            value=default_fee_txt, 
+                                            key=f"p_fee_txt_{index}"
+                                        )
                                         p_rcpt_book = c_r3.text_input("ใบเสร็จเล่มที่", value=str(row.get(cols['rcpt_book'], '')), key=f"p_book_{index}")
                                         p_rcpt_no = c_r4.text_input("ใบเสร็จเลขที่", value=str(row.get(cols['rcpt_no'], '')), key=f"p_no_{index}")
                                         
