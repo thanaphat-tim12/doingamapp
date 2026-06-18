@@ -464,7 +464,17 @@ def create_docx_document(data):
                             replacement_val = ""
                             pattern = re.escape(placeholder)
                     else:
-                        replacement_val = str(val)
+                        val_str = str(val)
+                        # เพิ่มช่องว่าง (Padding) รอบๆ ข้อมูลเพื่อให้แสดงเส้นประหรือระยะห่างสวยงามเหมือนในภาพ
+                        if key in ["p_license_book", "p_license_no", "p_license_year"]:
+                            replacement_val = f"   {val_str}   "
+                        elif key in ["p_name", "p_shop", "p_type"]:
+                            replacement_val = f"      {val_str}      "
+                        elif key == "p_nationality":
+                            replacement_val = f"   {val_str}      "
+                        else:
+                            replacement_val = val_str
+                            
                         # หากมีข้อมูลจริง ให้กวาดล้างจุดไข่ปลาที่ขนาบข้าง placeholder ออกไป (เพื่อไม่ให้จุดโผล่ซ้ำ)
                         pattern = rf"\.*{re.escape(placeholder)}\.*"
 
