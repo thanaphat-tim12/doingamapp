@@ -257,7 +257,7 @@ def create_pdf_overlay(data):
     output_stream.seek(0)
     return output_stream
 
-def replace_pattern_in_runs(runs, pattern, replacement):
+def replace_pattern_in_runs(runs, pattern, replacement, underline=None):
     run_texts = [r.text for r in runs]
     full_text = "".join(run_texts)
     import re
@@ -282,10 +282,14 @@ def replace_pattern_in_runs(runs, pattern, replacement):
             run_text_list = list(r.text)
             run_text_list[start_run_char : start_run_char + (end_char - start_char)] = list(replacement)
             r.text = "".join(run_text_list)
+            if underline is not None:
+                r.font.underline = underline
         else:
             r_start = runs[start_run_idx]
             start_text = r_start.text[:start_run_char] + replacement
             r_start.text = start_text
+            if underline is not None:
+                r_start.font.underline = underline
             for idx in range(start_run_idx + 1, end_run_idx):
                 runs[idx].text = ""
             r_end = runs[end_run_idx]
@@ -535,12 +539,15 @@ def create_app_docx_document(data):
                             replacement_val = "          "
                     else:
                         if key in ["p_road", "p_nationality"]:
-                            replacement_val = str(val) + "            "  # เติมช่องว่าง 12 ตัวด้านหลังเพื่อให้เส้นประยื่นยาวออกมา
+                            replacement_val = f"  {str(val)}  "  
+                        elif key in ["p_name", "p_shop", "p_type", "p_fee_text", "p_rcpt_book", "p_address", "p_moo", "p_soi"]:
+                            replacement_val = f"      {str(val)}      "
                         else:
-                            replacement_val = str(val)
+                            replacement_val = f" {str(val)} "
                     pattern = re.escape(placeholder)
                     
-                    if replace_pattern_in_runs(paragraph.runs, pattern, replacement_val):
+                    # 4 = WD_UNDERLINE.DOTTED
+                    if replace_pattern_in_runs(paragraph.runs, pattern, replacement_val, underline=4):
                         has_changes = True
                         
             if has_changes:
