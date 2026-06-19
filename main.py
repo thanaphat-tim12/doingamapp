@@ -528,11 +528,13 @@ def create_app_docx_document(data):
                     if is_empty:
                         # หากไม่มีข้อมูล ให้แทนที่ด้วยเว้นวรรคเพื่อให้เส้นใต้แบบจุด (Dotted Underline) ใน Word แสดงผลเป็นเส้นประ
                         if key in ["p_road"]:
-                            replacement_val = "                              "  # เพิ่มเป็น 30 ช่องว่าง
+                            replacement_val = "              -               "
                         elif key in ["p_nationality"]:
                             replacement_val = "                    "  # เพิ่มเป็น 20 ช่องว่าง
-                        elif key in ["p_agent", "p_soi"]:
+                        elif key in ["p_agent"]:
                             replacement_val = "                 "
+                        elif key in ["p_soi"]:
+                            replacement_val = "        -        "
                         elif key in ["p_name", "p_shop", "p_type", "p_fee_text", "p_rcpt_book"]:
                             replacement_val = "                              "
                         else:
@@ -598,8 +600,11 @@ def create_app_pdf_overlay(data):
     
     can.drawString(205, 509.9 - offset_y, str(data.get('p_addr', '')))
     can.drawString(275, 509.9 - offset_y, str(data.get('p_moo', '')))
-    can.drawString(350, 509.9 - offset_y, str(data.get('p_soi', '')))
-    can.drawString(430, 509.9 - offset_y, str(data.get('p_road', '')))
+    
+    p_soi_val = str(data.get('p_soi', '')).strip()
+    p_road_val = str(data.get('p_road', '')).strip()
+    can.drawString(350, 509.9 - offset_y, "-" if not p_soi_val or p_soi_val == "None" else p_soi_val)
+    can.drawString(430, 509.9 - offset_y, "-" if not p_road_val or p_road_val == "None" else p_road_val)
     
     can.drawString(130, 482.3 - offset_y, str(data.get('p_subdistrict', 'ดอยงาม')))
     can.drawString(280, 482.3 - offset_y, str(data.get('p_district', 'พาน')))
