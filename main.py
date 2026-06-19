@@ -168,7 +168,11 @@ def create_pdf_overlay(data):
 
     # วาดบรรทัดที่ 1: เล่มที่ / เลขที่ / ปี
     can.drawString(90, y1, str(data.get('p_license_book', '')))
-    can.drawString(155, y1, str(data.get('p_license_no', '')))
+    
+    rcpt_no = str(data.get('p_rcpt_no', '')).strip()
+    license_no = rcpt_no if rcpt_no and rcpt_no != "-" else str(data.get('p_license_no', ''))
+    can.drawString(155, y1, license_no)
+    
     can.drawString(210, y1, str(data.get('p_license_year', '')))
     
     # วาดบรรทัดที่ 2: ชื่อ / สัญชาติ
@@ -208,15 +212,8 @@ def create_pdf_overlay(data):
     
     # วาดบรรทัดที่ 10: ใบเสร็จรับเงิน
     rcpt_book = str(data.get('p_rcpt_book', '')).strip()
-    rcpt_no = str(data.get('p_rcpt_no', '')).strip()
-    rcpt_combined = rcpt_book
-    if rcpt_no and rcpt_no != "-":
-        if rcpt_book:
-            rcpt_combined += f" / {rcpt_no}"
-        else:
-            rcpt_combined = rcpt_no
-            
-    can.drawString(170, y10, rcpt_combined)
+    
+    can.drawString(170, y10, rcpt_book)
     can.drawString(365, y10, str(data.get('p_rcpt_date', '')))
     
     # วาดบรรทัดที่ 11: วันออกใบอนุญาต (ข้อ 5)
@@ -355,19 +352,14 @@ def create_docx_document(data):
     else:
         template_file = "template 1.docx"
 
-    # ผสมเล่มและเลขที่ใบเสร็จ
+    # เล่มใบเสร็จ (ไม่รวมเลขที่แล้ว)
     rcpt_book = raw_data.get("p_rcpt_book", "")
     rcpt_no = raw_data.get("p_rcpt_no", "")
     rcpt_combined = rcpt_book
-    if rcpt_no and rcpt_no != "-":
-        if rcpt_book:
-            rcpt_combined += f" / {rcpt_no}"
-        else:
-            rcpt_combined = rcpt_no
 
     mapped_data = {
         "p_license_book": raw_data.get("p_license_book", ""),
-        "p_license_no": raw_data.get("p_license_no", ""),
+        "p_license_no": rcpt_no if rcpt_no and rcpt_no != "-" else raw_data.get("p_license_no", ""),
         "p_license_year": raw_data.get("p_license_year", ""),
         "p_name": raw_data.get("p_name", ""),
         "p_nationality": raw_data.get("p_nationality", ""),
