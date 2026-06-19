@@ -1090,7 +1090,15 @@ if menu == "หน้าแรก (Dashboard)":
         st.info(f"พบข้อมูลทั้งหมด {len(f_df)} รายการ (กรองตามประเภท: {app_category})")
         
         # Display the dataframe
-        st.dataframe(f_df, use_container_width=True)
+        st.dataframe(
+            f_df, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                "ลำดับที่": None,
+                "ลำดับ": None
+            }
+        )
         
         # Add download button
         import io
@@ -1204,10 +1212,20 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                 
                 if len(expired_df) > 0:
                     st.subheader("🛑 รายชื่อที่หมดอายุแล้ว")
-                    st.dataframe(expired_df, use_container_width=True)
+                    st.dataframe(
+                        expired_df, 
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={"ลำดับที่": None, "ลำดับ": None}
+                    )
                 if len(near_exp_df) > 0:
                     st.subheader("⏳ รายชื่อใกล้หมดอายุ")
-                    st.dataframe(near_exp_df, use_container_width=True)
+                    st.dataframe(
+                        near_exp_df, 
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={"ลำดับที่": None, "ลำดับ": None}
+                    )
             except Exception as e: st.error(f"สร้างไฟล์ไม่สำเร็จ: {e}")
         else: st.success("✅ ไม่มีรายชื่อใกล้หมดอายุ หรือหมดอายุแล้ว")
 
