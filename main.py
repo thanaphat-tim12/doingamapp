@@ -1106,7 +1106,8 @@ if menu == "หน้าแรก (Dashboard)":
         try:
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 safe_sheet_name = target_sheet[:31]
-                f_df.to_excel(writer, index=False, sheet_name=safe_sheet_name)
+                export_df = f_df.drop(columns=[col for col in ['ลำดับ', 'ลำดับที่'] if col in f_df.columns])
+                export_df.to_excel(writer, index=False, sheet_name=safe_sheet_name)
             
             st.download_button(
                 label="📥 ดาวน์โหลดรายชื่อนี้เป็นไฟล์ Excel",
