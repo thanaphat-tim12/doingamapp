@@ -314,6 +314,14 @@ def admin_dashboard():
                 c1, c2 = st.columns([4, 1])
                 with c1:
                     st.markdown(f"<p style='color: white;'><span style='color: #34d399;'>●</span> <b>{u_data.get('name')}</b> ({u.id}) — {u_data.get('position', '-')}</p>", unsafe_allow_html=True)
+                    with st.expander("🔑 เปลี่ยนรหัสผ่าน"):
+                        new_pw = st.text_input("กำหนดรหัสผ่านใหม่", type="password", key=f"new_pw_{u.id}")
+                        if st.button("บันทึกรหัสผ่านใหม่", key=f"save_pw_{u.id}", type="primary"):
+                            if new_pw:
+                                db.collection("users").document(u.id).update({"password": hash_password(new_pw)})
+                                st.success(f"เปลี่ยนรหัสผ่านให้ {u_data.get('name')} สำเร็จ!")
+                            else:
+                                st.error("กรุณากรอกรหัสผ่านใหม่")
                 with c2:
                     if st.button("ยกเลิกสิทธิ์", key=f"rev_{u.id}"):
                         db.collection("users").document(u.id).update({"status": "revoked"})
