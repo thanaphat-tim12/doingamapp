@@ -1277,6 +1277,12 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                     new_entry[f] = t.text_input(f, value=next_seq)
                 elif 'วัน' in f:
                     new_entry[f] = t.date_input(f, value=datetime.now()).strftime('%d/%m/%Y')
+                elif f == 'ตำบล' or f == 'ตำบล (ร้าน)':
+                    new_entry[f] = t.text_input(f, value="ดอยงาม")
+                elif f == 'อำเภอ' or f == 'อำเภอ (ร้าน)':
+                    new_entry[f] = t.text_input(f, value="พาน")
+                elif f == 'จังหวัด' or f == 'จังหวัด (ร้าน)':
+                    new_entry[f] = t.text_input(f, value="เชียงราย")
                 else:
                     new_entry[f] = t.text_input(f, value="")
 
