@@ -117,6 +117,13 @@ def admin_css():
             background-color: rgba(255,255,255,0.05) !important;
             border-color: rgba(255,255,255,0.2) !important;
         }
+        [data-testid="stExpander"] summary p {
+            color: white !important;
+        }
+        [data-testid="stExpander"] summary svg {
+            fill: white !important;
+            color: white !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
