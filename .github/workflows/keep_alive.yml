@@ -21,7 +21,7 @@ jobs:
           
       - name: Run Headless Browser to Wake Up Streamlit
         run: |
-          python -c '
+          cat << 'EOF' > run_wakeup.py
           import time
           from selenium import webdriver
           from selenium.webdriver.chrome.options import Options
@@ -72,4 +72,5 @@ jobs:
           print("เปิดหน้าเว็บสำเร็จ หัวข้อหน้าเว็บคือ:", driver.title)
           driver.quit()
           print("เสร็จสิ้น!")
-          '
+          EOF
+          python run_wakeup.py
