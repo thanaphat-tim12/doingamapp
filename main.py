@@ -1744,7 +1744,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             a_nat = col_a2.text_input("สัญชาติ", value="ไทย", key=f"a_nat_{index}")
                                             
                                             a_agent = col_a1.text_input("โดย (ผู้มีอำนาจลงนามแทนนิติบุคคล)", value="", key=f"a_agent_{index}")
-                                            a_evidence = col_a2.text_input("ปรากฏตาม", value="บัตรประจำตัวประชาชน", placeholder="เช่น บัตรประจำตัวประชาชน", key=f"a_evid_{index}")
+                                            a_evidence = col_a2.text_input("ปรากฏตาม", value="", placeholder="ระบุเอกสารอ้างอิง เช่น บัตรประจำตัวประชาชน", key=f"a_evid_{index}")
                                             
                                             a_phone = col_a1.text_input("หมายเลขโทรศัพท์", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"a_phone_{index}")
                                             
