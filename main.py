@@ -543,12 +543,15 @@ def create_app_docx_document(data):
                             replacement_val = f"  {str(val)}  "  
                         elif key in ["p_name", "p_shop", "p_type", "p_fee_text", "p_rcpt_book", "p_address", "p_moo", "p_soi"]:
                             replacement_val = f"      {str(val)}      "
+                        elif key.startswith("chk_"):
+                            replacement_val = str(val)
                         else:
                             replacement_val = f" {str(val)} "
                     pattern = re.escape(placeholder)
                     
                     # 4 = WD_UNDERLINE.DOTTED
-                    if replace_pattern_in_runs(paragraph.runs, pattern, replacement_val, underline=4):
+                    ul_val = None if key.startswith("chk_") else 4
+                    if replace_pattern_in_runs(paragraph.runs, pattern, replacement_val, underline=ul_val):
                         has_changes = True
                         
             if has_changes:
