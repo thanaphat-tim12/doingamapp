@@ -530,7 +530,7 @@ def create_app_docx_document(data):
                             replacement_val = "    -    "
                         elif key in ["p_nationality"]:
                             replacement_val = "                    "  # เพิ่มเป็น 20 ช่องว่าง
-                        elif key in ["p_agent"]:
+                        elif key in ["p_agent", "p_evidence"]:
                             replacement_val = "                 "
                         elif key in ["p_soi"]:
                             replacement_val = "    -    "
@@ -1744,7 +1744,9 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                             a_nat = col_a2.text_input("สัญชาติ", value="ไทย", key=f"a_nat_{index}")
                                             
                                             a_agent = col_a1.text_input("โดย (ผู้มีอำนาจลงนามแทนนิติบุคคล)", value="", key=f"a_agent_{index}")
-                                            a_phone = col_a2.text_input("หมายเลขโทรศัพท์", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"a_phone_{index}")
+                                            a_evidence = col_a2.text_input("ปรากฏตาม", value="บัตรประจำตัวประชาชน", placeholder="เช่น บัตรประจำตัวประชาชน", key=f"a_evid_{index}")
+                                            
+                                            a_phone = col_a1.text_input("หมายเลขโทรศัพท์", value=row.get(cols.get('phone', 'โทรศัพท์'), ''), key=f"a_phone_{index}")
                                             
                                             st.markdown("**ที่อยู่ผู้ขออนุญาต**")
                                             c_addr1, c_addr2, c_addr3, c_addr4 = st.columns(4)
@@ -1801,6 +1803,7 @@ elif menu == "ค้นหา/จัดการข้อมูล":
                                                 "p_age": a_age,
                                                 "p_nationality": a_nat,
                                                 "p_agent": a_agent,
+                                                "p_evidence": a_evidence,
                                                 "p_addr": a_addr,
                                                 "p_moo": a_moo,
                                                 "p_soi": a_soi,
