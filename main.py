@@ -1022,12 +1022,12 @@ with st.sidebar:
     # 3. โหลดข้อมูลจากชีตที่เลือกมาใช้งาน
     df, cols, _ = load_data(target_sheet)
     
-    app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
+    app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบการ", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
     
     # --- กรองประเภทกิจการ (Global Filter) ---
     if app_category != "ทั้งหมด" and not df.empty:
         search_terms = []
-        if app_category == "สถานประกอบกิจการ":
+        if app_category in ["สถานประกอบกิจการ", "สถานประกอบการ"]:
             search_terms = ["สถานประกอบ"]
         elif app_category == "จำหน่าย/สะสมอาหาร":
             search_terms = ["จำหน่าย", "สะสมอาหาร"]
