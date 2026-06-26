@@ -647,7 +647,7 @@ def create_app_pdf_overlay(data):
 
 # --- ส่วนที่ 1: การตั้งค่าการเชื่อมต่อและ API ---
 SERVICE_ACCOUNT_FILE = 'credentials.json' 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1t_xTI0RvXTUsUAJOvqgs1RFKsDK5f5qPCOPOvIqeMrw/edit"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1y6TGhHjCv4p3RKpcYvj8R1-BatVkmJZJ/edit?gid=1479352449#gid=1479352449"
 GAS_URL = "https://script.google.com/macros/s/AKfycbxZ3Q1mk0hN69bmxctlOR95yKYC6hMP2BwaTXQn9WaX5edP09nUAKKv20N_kX-KzJg/exec"
 @st.cache_resource
 def get_gspread_client():
@@ -1022,12 +1022,12 @@ with st.sidebar:
     # 3. โหลดข้อมูลจากชีตที่เลือกมาใช้งาน
     df, cols, _ = load_data(target_sheet)
     
-    app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบการ", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
+    app_category = st.selectbox("เลือกประเภทกิจการ", ["ทั้งหมด", "สถานประกอบกิจการ", "จำหน่าย/สะสมอาหาร", "ตลาด"])
     
     # --- กรองประเภทกิจการ (Global Filter) ---
     if app_category != "ทั้งหมด" and not df.empty:
         search_terms = []
-        if app_category in ["สถานประกอบกิจการ", "สถานประกอบการ"]:
+        if app_category == "สถานประกอบกิจการ":
             search_terms = ["สถานประกอบ"]
         elif app_category == "จำหน่าย/สะสมอาหาร":
             search_terms = ["จำหน่าย", "สะสมอาหาร"]
