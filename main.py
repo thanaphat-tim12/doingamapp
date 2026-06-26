@@ -647,7 +647,7 @@ def create_app_pdf_overlay(data):
 
 # --- ส่วนที่ 1: การตั้งค่าการเชื่อมต่อและ API ---
 SERVICE_ACCOUNT_FILE = 'credentials.json' 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1y6TGhHjCv4p3RKpcYvj8R1-BatVkmJZJ/edit?gid=1479352449#gid=1479352449"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/10JKLZmRh9eU4uGWOb5bfg-lV0uu6I4COGE_OVxIZiNc/edit?usp=sharing"
 GAS_URL = "https://script.google.com/macros/s/AKfycbwS8V_4NCA-mPAIXPhzMsDnSh8ISM8_wQYEX1P7yc_5Bbc6PaFJlymrbvN-u_-o0ruF/exec"
 @st.cache_resource
 def get_gspread_client():
